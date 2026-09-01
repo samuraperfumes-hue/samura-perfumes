@@ -34,7 +34,8 @@
     .brand-logo { 
       max-width: 220px; 
       height: auto; 
-      filter: drop-shadow(0px 4px 10px rgba(212, 175, 55, 0.2)); 
+      mix-blend-mode: screen; 
+      filter: drop-shadow(0px 0px 12px rgba(212, 175, 55, 0.4)); 
     }
 
     /* Cards com Estilo Dourado Elegante */
@@ -221,7 +222,10 @@
     <div id="appScreen" style="display: none;">
       <div class="header-bar">
         <span id="labelUsuarioLogado" style="font-weight: bold; color: #D4AF37;"></span>
-        <button class="btn-sm btn-dark" onclick="location.reload()">Sair / Trocar Usuário</button>
+        <div>
+          <button class="btn-sm btn-info" onclick="buscarDadosIniciais(); carregarPainelControle();">🔄 Atualizar Dados</button>
+          <button class="btn-sm btn-dark" onclick="location.reload()">Sair / Trocar Usuário</button>
+        </div>
       </div>
 
       <div id="btnNovoVend" style="display:none; margin-bottom: 15px;">
@@ -397,6 +401,7 @@
       document.getElementById('boxFiltroVendedor').style.display = eAdmin ? 'block' : 'none';
 
       await buscarDadosIniciais();
+      document.getElementById('containerItens').innerHTML = '';
       adicionarLinhaProduto();
       carregarPainelControle();
     }
@@ -407,14 +412,15 @@
         catalogoGlobal = res.catalogo || [];
         mapaClientesGlobal = res.clientes || {};
         preencherDatalistClientesCadastro();
+        
+        // Atualiza as opções das linhas de produto já abertas
+        document.querySelectorAll('.item-linha .sel-tipo').forEach(sel => {
+          atualizarOpcoesTipo(sel);
+        });
       } else {
         console.error("Erro ao carregar dados iniciais:", res.erro);
       }
     }
-
-    window.onload = function() {
-      buscarDadosIniciais();
-    };
 
     function preencherDatalistClientesCadastro() {
       const datalist = document.getElementById('listaClientesCadastro');
@@ -449,7 +455,7 @@
       const res = await chamarAPI("cadastrarCliente", { dados: dados });
 
       if (res.sucesso) {
-        alert("Cliente cadastrado com sucesso!");
+        exibirToast("✓ Cliente cadastrado com sucesso!");
         const nomeUpper = dados.nome.toUpperCase();
         document.getElementById('clienteNome').value = nomeUpper;
         document.getElementById('clienteTelefone').value = dados.telefone;
@@ -466,13 +472,10 @@
       const div = document.createElement('div');
       div.className = 'item-linha';
 
-      const tipos = [...new Set(catalogoGlobal.map(c => c.tipo))];
-      let optTipos = tipos.map(t => `<option value="${t}" ${t === 'Perfume' ? 'selected' : ''}>${t}</option>`).join('');
-
       div.innerHTML = `
         <div class="col-tipo">
           <select class="sel-tipo" onchange="atualizarOpcoesFragrancia(this); calcularTotais();">
-            ${optTipos}
+            <option value="">Tipo...</option>
           </select>
         </div>
         <div class="col-frag">
@@ -510,7 +513,22 @@
       `;
 
       container.appendChild(div);
-      atualizarOpcoesFragrancia(div.querySelector('.sel-tipo'));
+      atualizarOpcoesTipo(div.querySelector('.sel-tipo'));
+    }
+
+    function atualizarOpcoesTipo(selectTipo) {
+      const valorAtual = selectTipo.value;
+      const tipos = [...new Set(catalogoGlobal.map(c => c.tipo))];
+      
+      selectTipo.innerHTML = tipos.map(t => `<option value="${t}">${t}</option>`).join('');
+      
+      if (valorAtual && tipos.includes(valorAtual)) {
+        selectTipo.value = valorAtual;
+      } else if (tipos.includes('Perfume')) {
+        selectTipo.value = 'Perfume';
+      }
+      
+      atualizarOpcoesFragrancia(selectTipo);
     }
 
     function atualizarOpcoesFragrancia(selectTipo) {
@@ -580,7 +598,7 @@
       const res = await chamarAPI("cadastrarVendedor", { usuario: user, senha: pass });
 
       if (res.sucesso) {
-        alert("Vendedor cadastrado com sucesso!");
+        exibirToast("✓ Vendedor cadastrado com sucesso!");
       } else {
         alert("Erro ao cadastrar vendedor: " + (res.erro || "Falha desconhecida."));
       }
