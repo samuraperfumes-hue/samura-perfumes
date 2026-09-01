@@ -5,11 +5,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- Tags para transformar em App (PWA) -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Samura Perfumes">
-<meta name="theme-color" content="#0b0b0b">
-<link rel="apple-touch-icon" href="https://lh3.googleusercontent.com/d/1Xj3j4vX3o7_4G7e7E6zX9E4QkY5H_O-j">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Samura Perfumes">
+  <meta name="theme-color" content="#0b0b0b">
+  <link rel="apple-touch-icon" href="logo.png">
   <title>Samura Perfumes - Sistema de Gestão</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Montserrat:wght@300;400;600&display=swap');
@@ -166,636 +166,651 @@
     .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #222; }
     .responsive-table { overflow-x: auto; }
 
-  /* Notificação Toast Flutuante */
-#toast-notification {
-  visibility: hidden;
-  min-width: 280px;
-  background-color: #2e7d32;
-  color: #fff;
-  text-align: center;
-  border-radius: 8px;
-  padding: 14px 20px;
-  position: fixed;
-  z-index: 9999;
-  left: 50%;
-  top: 30px;
-  transform: translateX(-50%);
-  font-size: 15px;
-  font-weight: 600;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-  transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
-  opacity: 0;
-}
+    /* Notificação Toast Flutuante */
+    #toast-notification {
+      visibility: hidden;
+      min-width: 280px;
+      background-color: #2e7d32;
+      color: #fff;
+      text-align: center;
+      border-radius: 8px;
+      padding: 14px 20px;
+      position: fixed;
+      z-index: 9999;
+      left: 50%;
+      top: 30px;
+      transform: translateX(-50%);
+      font-size: 15px;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+      opacity: 0;
+    }
 
-#toast-notification.show {
-  visibility: visible;
-  opacity: 1;
-}
-</style>
-
+    #toast-notification.show {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
+</head>
 <body>
   <div id="toast-notification">Venda salva com sucesso!</div>
 
-<div class="container">
+  <div class="container">
 
-  <!-- CABEÇALHO DA MARCA COM LOGO -->
-  <div class="brand-header">
-    <img src="https://lh3.googleusercontent.com/d/1Xj3j4vX3o7_4G7e7E6zX9E4QkY5H_O-j" alt="Samura Perfumes" class="brand-logo" id="imgLogo">
-  </div>
-
-  <!-- TELA DE LOGIN -->
-  <div id="loginScreen" class="card" style="max-width: 380px; margin: 0 auto;">
-    <h2>🔑 Acesso ao Sistema</h2>
-    <div class="form-group">
-      <label>Usuário</label>
-      <input type="text" id="loginUsuario" placeholder="Digite seu usuário">
-    </div>
-    <div class="form-group">
-      <label>Senha</label>
-      <input type="password" id="loginSenha" placeholder="Digite sua senha">
-    </div>
-    <button class="btn" onclick="fazerLogin()">Entrar no Sistema</button>
-  </div>
-
-  <!-- APLICAÇÃO -->
-  <div id="appScreen" style="display: none;">
-    <div class="header-bar">
-      <span id="labelUsuarioLogado" style="font-weight: bold; color: #D4AF37;"></span>
-      <button class="btn-sm btn-dark" onclick="location.reload()">Sair / Trocar Usuário</button>
+    <!-- CABEÇALHO DA MARCA COM LOGO LOCAL -->
+    <div class="brand-header">
+      <img src="logo.png" alt="Samura Perfumes" class="brand-logo" id="imgLogo">
     </div>
 
-    <div id="btnNovoVend" style="display:none; margin-bottom: 15px;">
-      <button class="btn btn-secondary" onclick="cadastrarNovoVendedor()">➕ Cadastrar Novo Vendedor</button>
-    </div>
-
-    <!-- LANÇAMENTO DE VENDA -->
-    <div class="card">
-      <h2>🛒 Novo Lançamento de Venda</h2>
-      <input type="hidden" id="vendedorLogado">
-
-      <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-        <div class="form-group" style="flex: 2; min-width: 200px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <label style="margin-bottom: 0;">Nome do Cliente</label>
-            <button type="button" class="btn-sm btn-secondary" onclick="cadastrarNovoCliente()" style="padding: 2px 6px; font-size: 10px;">➕ Novo Cliente</button>
-          </div>
-          <!-- ALTERADO: INPUT COM DATALIST E ONINPUT PARA BUSCA DINÂMICA -->
-          <input type="text" id="clienteNome" placeholder="Digite o nome do cliente..." list="listaClientesCadastro" oninput="buscarTelefoneClienteAutomatico()">
-          <datalist id="listaClientesCadastro"></datalist>
-        </div>
-        <!-- ADICIONADO: CAMPO EXCLUSIVO PARA EXIBIR TELEFONE AUTOMATICAMENTE -->
-        <div class="form-group" style="flex: 1; min-width: 150px;">
-          <label>Telefone do Cliente</label>
-          <input type="text" id="clienteTelefone" placeholder="Auto-preenchido" readonly style="background: #181818; color: #D4AF37; font-weight: bold;">
-        </div>
-        <div class="form-group" style="flex: 1; min-width: 150px;">
-          <label>Data de Agendamento</label>
-          <input type="date" id="dataAgendamento">
-        </div>
-        <div class="form-group" style="flex: 1; min-width: 150px;">
-          <label>Forma de Pagamento</label>
-          <select id="formaPagamento">
-            <option value="PIX">PIX</option>
-            <option value="Cartão de Crédito">Cartão de Crédito</option>
-            <option value="Cartão de Débito">Cartão de Débito</option>
-            <option value="Dinheiro">Dinheiro</option>
-            <option value="Outro">Outro</option>
-          </select>
-        </div>
-      </div>
-      
+    <!-- TELA DE LOGIN -->
+    <div id="loginScreen" class="card" style="max-width: 380px; margin: 0 auto;">
+      <h2>🔑 Acesso ao Sistema</h2>
       <div class="form-group">
-        <label>Informações do Agendamento / Observações</label>
-        <textarea id="infoAgendamento" placeholder="Ex: Entregar no período da tarde / Confirmar antes de enviar"></textarea>
+        <label>Usuário</label>
+        <input type="text" id="loginUsuario" placeholder="Digite seu usuário">
       </div>
-
-      <h3>Produtos da Venda</h3>
-      <div id="containerItens"></div>
-      <button type="button" class="btn-sm btn-secondary" onclick="adicionarLinhaProduto()" style="margin-bottom: 15px;">+ Adicionar Produto</button>
-
-      <div class="form-group" style="max-width: 200px;">
-        <label>Desconto Total (R$)</label>
-        <input type="number" id="descontoTotal" value="0" oninput="calcularTotais()">
+      <div class="form-group">
+        <label>Senha</label>
+        <input type="password" id="loginSenha" placeholder="Digite sua senha">
       </div>
-
-      <div style="font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #FFD700;">
-        Total Final: R$ <span id="labelTotalFinal">0,00</span>
-      </div>
-
-      <button class="btn" onclick="salvarVenda()">Finalizar e Salvar Venda</button>
+      <button class="btn" onclick="fazerLogin()">Entrar no Sistema</button>
     </div>
 
-    <!-- PAINEL DE CONTROLE DE VENDAS -->
-    <div class="card">
-      <h2>📦 Controle e Histórico de Vendas</h2>
+    <!-- APLICAÇÃO -->
+    <div id="appScreen" style="display: none;">
+      <div class="header-bar">
+        <span id="labelUsuarioLogado" style="font-weight: bold; color: #D4AF37;"></span>
+        <button class="btn-sm btn-dark" onclick="location.reload()">Sair / Trocar Usuário</button>
+      </div>
 
-      <div class="filtros-bar">
-        <!-- BUSCA DINÂMICA DE VENDEDOR -->
-        <div id="boxFiltroVendedor" style="display: none;">
-          <label>Vendedor (Digite para Filtrar):</label>
-          <input type="text" id="inputFiltroVendedor" placeholder="Nome do vendedor..." oninput="aplicarFiltros()" list="listaVendedores">
-          <datalist id="listaVendedores"></datalist>
+      <div id="btnNovoVend" style="display:none; margin-bottom: 15px;">
+        <button class="btn btn-secondary" onclick="cadastrarNovoVendedor()">➕ Cadastrar Novo Vendedor</button>
+      </div>
+
+      <!-- LANÇAMENTO DE VENDA -->
+      <div class="card">
+        <h2>🛒 Novo Lançamento de Venda</h2>
+        <input type="hidden" id="vendedorLogado">
+
+        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+          <div class="form-group" style="flex: 2; min-width: 200px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <label style="margin-bottom: 0;">Nome do Cliente</label>
+              <button type="button" class="btn-sm btn-secondary" onclick="cadastrarNovoCliente()" style="padding: 2px 6px; font-size: 10px;">➕ Novo Cliente</button>
+            </div>
+            <input type="text" id="clienteNome" placeholder="Digite o nome do cliente..." list="listaClientesCadastro" oninput="buscarTelefoneClienteAutomatico()">
+            <datalist id="listaClientesCadastro"></datalist>
+          </div>
+          <div class="form-group" style="flex: 1; min-width: 150px;">
+            <label>Telefone do Cliente</label>
+            <input type="text" id="clienteTelefone" placeholder="Auto-preenchido" readonly style="background: #181818; color: #D4AF37; font-weight: bold;">
+          </div>
+          <div class="form-group" style="flex: 1; min-width: 150px;">
+            <label>Data de Agendamento</label>
+            <input type="date" id="dataAgendamento">
+          </div>
+          <div class="form-group" style="flex: 1; min-width: 150px;">
+            <label>Forma de Pagamento</label>
+            <select id="formaPagamento">
+              <option value="PIX">PIX</option>
+              <option value="Cartão de Crédito">Cartão de Crédito</option>
+              <option value="Cartão de Débito">Cartão de Débito</option>
+              <option value="Dinheiro">Dinheiro</option>
+              <option value="Outro">Outro</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Informações do Agendamento / Observações</label>
+          <textarea id="infoAgendamento" placeholder="Ex: Entregar no período da tarde / Confirmar antes de enviar"></textarea>
         </div>
 
-        <!-- NOVO: BUSCA DINÂMICA DE CLIENTE -->
-        <div>
-          <label>Cliente (Digite para Filtrar):</label>
-          <input type="text" id="inputFiltroCliente" placeholder="Nome do cliente..." oninput="aplicarFiltros()" list="listaClientes">
-          <datalist id="listaClientes"></datalist>
+        <h3>Produtos da Venda</h3>
+        <div id="containerItens"></div>
+        <button type="button" class="btn-sm btn-secondary" onclick="adicionarLinhaProduto()" style="margin-bottom: 15px;">+ Adicionar Produto</button>
+
+        <div class="form-group" style="max-width: 200px;">
+          <label>Desconto Total (R$)</label>
+          <input type="number" id="descontoTotal" value="0" oninput="calcularTotais()">
         </div>
 
-        <div>
-          <label>Mês:</label>
-          <select id="selectFiltroMes" onchange="aplicarFiltros()">
-            <option value="TODOS">Todos os Meses</option>
-          </select>
+        <div style="font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #FFD700;">
+          Total Final: R$ <span id="labelTotalFinal">0,00</span>
+        </div>
+
+        <button class="btn" onclick="salvarVenda()">Finalizar e Salvar Venda</button>
+      </div>
+
+      <!-- PAINEL DE CONTROLE DE VENDAS -->
+      <div class="card">
+        <h2>📦 Controle e Histórico de Vendas</h2>
+
+        <div class="filtros-bar">
+          <div id="boxFiltroVendedor" style="display: none;">
+            <label>Vendedor (Digite para Filtrar):</label>
+            <input type="text" id="inputFiltroVendedor" placeholder="Nome do vendedor..." oninput="aplicarFiltros()" list="listaVendedores">
+            <datalist id="listaVendedores"></datalist>
+          </div>
+
+          <div>
+            <label>Cliente (Digite para Filtrar):</label>
+            <input type="text" id="inputFiltroCliente" placeholder="Nome do cliente..." oninput="aplicarFiltros()" list="listaClientes">
+            <datalist id="listaClientes"></datalist>
+          </div>
+
+          <div>
+            <label>Mês:</label>
+            <select id="selectFiltroMes" onchange="aplicarFiltros()">
+              <option value="TODOS">Todos os Meses</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="botoes-status">
+          <button class="btn-sm btn-dark" onclick="setFiltroStatus('TODOS')">Todas</button>
+          <button class="btn-sm btn-warning" onclick="setFiltroStatus('PENDENTES_PAG')">Pagamentos Pendentes</button>
+          <button class="btn-sm btn-purple" onclick="setFiltroStatus('PENDENTES_ENT')">Entregas Pendentes</button>
+          <button class="btn-sm btn-green" onclick="setFiltroStatus('PAGOS')">Somente Pagos</button>
+          <button class="btn-sm btn-info" onclick="carregarPainelControle()">🔄 Atualizar Base</button>
+        </div>
+
+        <div class="responsive-table">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Vendedor</th>
+                <th>Cliente</th>
+                <th>Total</th>
+                <th>Agendamento</th>
+                <th>Pagamento</th>
+                <th>Entrega Geral</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tabelaControle">
+              <tr><td colspan="8" style="text-align:center;">Carregando registros...</td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
-      <div class="botoes-status">
-        <button class="btn-sm btn-dark" onclick="setFiltroStatus('TODOS')">Todas</button>
-        <button class="btn-sm btn-warning" onclick="setFiltroStatus('PENDENTES_PAG')">Pagamentos Pendentes</button>
-        <button class="btn-sm btn-purple" onclick="setFiltroStatus('PENDENTES_ENT')">Entregas Pendentes</button>
-        <button class="btn-sm btn-green" onclick="setFiltroStatus('PAGOS')">Somente Pagos</button>
-        <button class="btn-sm btn-info" onclick="carregarPainelControle()">🔄 Atualizar Base</button>
-      </div>
-
-      <div class="responsive-table">
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Vendedor</th>
-              <th>Cliente</th>
-              <th>Total</th>
-              <th>Agendamento</th>
-              <th>Pagamento</th>
-              <th>Entrega Geral</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody id="tabelaControle">
-            <tr><td colspan="8" style="text-align:center;">Carregando registros...</td></tr>
-          </tbody>
-        </table>
-      </div>
     </div>
 
   </div>
 
-</div>
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbw9PqZASwgNfrMv-hXqssFG9vylTgxbqR7_dhBoNkiIhEFs64C8A8atE2aeso5z2Ejh/exec";
 
-<script>
-
-  // URL da API gerada no Google Apps Script
-const API_URL = "https://script.google.com/macros/s/AKfycbw9PqZASwgNfrMv-hXqssFG9vylTgxbqR7_dhBoNkiIhEFs64C8A8atE2aeso5z2Ejh/exec";
-
-// Função para enviar requisições para o backend
-async function chamarAPI(acao, dados = {}) {
-  try {
-    const resposta = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ acao: acao, ...dados })
-    });
-    return await resposta.json();
-  } catch (erro) {
-    console.error("Erro na comunicação com a API:", erro);
-    return { sucesso: false, erro: "Falha na conexão com o servidor." };
-  }
-}
-  function exibirToast(mensagem) {
-  var toast = document.getElementById("toast-notification");
-  toast.innerText = mensagem;
-  toast.className = "show";
-  
-  setTimeout(function() { 
-    toast.className = toast.className.replace("show", ""); 
-  }, 2500);
-}
-  const NOME_ADMINISTRADOR = "RODRIGO";
-
-  let catalogoGlobal = [];
-  let mapaClientesGlobal = {};
-  let usuarioLogado = "";
-  let cacheVendas = [];
-  let filtroStatusAtual = 'TODOS';
-
-  async function fazerLogin() {
-  const u = document.getElementById('loginUsuario').value;
-  const s = document.getElementById('loginSenha').value;
-
-  if (!u || !s) return alert("Por favor, preencha usuário e senha.");
-
-  const res = await chamarAPI("autenticarUsuario", { usuario: u, senha: s });
-
-  if (!res.sucesso) return alert("Erro: " + res.erro);
-
-  usuarioLogado = res.usuario;
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('appScreen').style.display = 'block';
-  document.getElementById('vendedorLogado').value = usuarioLogado;
-  document.getElementById('labelUsuarioLogado').innerText = "👤 VENDEDOR: " + usuarioLogado.toUpperCase();
-
-  const eAdmin = usuarioLogado.toUpperCase().trim() === NOME_ADMINISTRADOR.toUpperCase().trim();
-  document.getElementById('btnNovoVend').style.display = eAdmin ? 'block' : 'none';
-  document.getElementById('boxFiltroVendedor').style.display = eAdmin ? 'block' : 'none';
-
-  adicionarLinhaProduto();
-  carregarPainelControle();
-}
-
-  window.onload = function() {
-    google.script.run.withSuccessHandler(res => {
-      catalogoGlobal = res.catalogo || [];
-      mapaClientesGlobal = res.clientes || {};
-      preencherDatalistClientesCadastro(); // ALIMENTA A LISTA DINÂMICA DE CLIENTES AO CARREGAR
-    }).buscarDadosIniciais();
-  };
-
-  // PREENCHE OS CLIENTES NA LISTA DINÂMICA DO FORMULÁRIO DE NOVO LANÇAMENTO
-  function preencherDatalistClientesCadastro() {
-    const datalist = document.getElementById('listaClientesCadastro');
-    if (!datalist) return;
-    datalist.innerHTML = '';
-    
-    Object.keys(mapaClientesGlobal).forEach(nome => {
-      datalist.innerHTML += `<option value="${nome}">`;
-    });
-  }
-
-  // BUSCA AUTOMATICAMENTE O TELEFONE AO SELECIONAR OU DIGITAR O NOME DO CLIENTE
-  function buscarTelefoneClienteAutomatico() {
-    const nomeInput = document.getElementById('clienteNome').value.trim().toUpperCase();
-    const campoTelefone = document.getElementById('clienteTelefone');
-
-    if (mapaClientesGlobal[nomeInput]) {
-      const info = mapaClientesGlobal[nomeInput];
-      campoTelefone.value = typeof info === 'object' ? (info.telefone || info.fone || '') : info;
-    } else {
-      campoTelefone.value = '';
-    }
-  }
-
-  // FUNÇÃO PARA CADASTRO DE CLIENTE RESPEITANDO A PLANILHA (Nome, Telefone, Data, Observações)
-  function cadastrarNovoCliente() {
-    const nome = prompt("Nome do cliente:");
-    if (!nome) return;
-    const telefone = prompt("Telefone / WhatsApp (apenas números):") || "";
-    const obs = prompt("Observações (opcional):") || "";
-
-    const dados = { nome: nome.trim(), telefone: telefone, endereco: obs };
-
-    google.script.run.withSuccessHandler(() => {
-      alert("Cliente cadastrado com sucesso!");
-      const nomeUpper = dados.nome.toUpperCase();
-      document.getElementById('clienteNome').value = nomeUpper;
-      document.getElementById('clienteTelefone').value = dados.telefone;
-      
-      // Atualiza o mapa global para a busca dinâmica funcionar imediatamente
-      mapaClientesGlobal[nomeUpper] = { telefone: dados.telefone };
-      preencherDatalistClientesCadastro();
-    }).cadastrarCliente(dados);
-  }
-
-  function adicionarLinhaProduto() {
-    const container = document.getElementById('containerItens');
-    const div = document.createElement('div');
-    div.className = 'item-linha';
-
-    const tipos = [...new Set(catalogoGlobal.map(c => c.tipo))];
-    let optTipos = tipos.map(t => `<option value="${t}" ${t === 'Perfume' ? 'selected' : ''}>${t}</option>`).join('');
-
-    div.innerHTML = `
-      <div class="col-tipo">
-        <select class="sel-tipo" onchange="atualizarOpcoesFragrancia(this); calcularTotais();">
-          ${optTipos}
-        </select>
-      </div>
-      <div class="col-frag">
-        <select class="sel-frag" onchange="atualizarOpcoesVolumetria(this); calcularTotais();">
-          <option value="">Selecione Fragrância...</option>
-        </select>
-      </div>
-      <div class="col-vol">
-        <select class="sel-vol" onchange="atualizarPrecoEVolumetria(this); calcularTotais();">
-          <option value="">Volum.</option>
-        </select>
-      </div>
-      <div class="col-qtd">
-        <input type="number" value="1" min="1" placeholder="Qtd" oninput="calcularTotais()" class="qtd">
-      </div>
-      <div class="col-preco">
-        <input type="number" placeholder="Unit (R$)" step="0.01" oninput="calcularTotais()" class="preco">
-      </div>
-      <div class="col-status-ent">
-        <label style="font-size: 9px; margin-bottom: 2px;">Entrega</label>
-        <select class="sel-status-item">
-          <option value="Pendente" selected>Não Entregue</option>
-          <option value="Entregue">Entregue</option>
-        </select>
-      </div>
-      <div class="col-status-pag">
-        <label style="font-size: 9px; margin-bottom: 2px;">Pagamento</label>
-        <select class="sel-status-pag-item">
-          <option value="Pendente" selected>Pendente</option>
-          <option value="Pago">Pago</option>
-          <option value="Agendado">Agendado</option>
-        </select>
-      </div>
-      <button type="button" class="btn-remove" onclick="removerLinha(this)">X</button>
-    `;
-
-    container.appendChild(div);
-    atualizarOpcoesFragrancia(div.querySelector('.sel-tipo'));
-  }
-
-  function atualizarOpcoesFragrancia(selectTipo) {
-    const linha = selectTipo.parentElement.parentElement;
-    const tipoSel = selectTipo.value;
-    const selectFrag = linha.querySelector('.sel-frag');
-
-    const fragrancias = [...new Set(catalogoGlobal.filter(c => c.tipo === tipoSel).map(c => c.fragrancia))];
-    selectFrag.innerHTML = '<option value="">Selecione Fragrância...</option>' + 
-      fragrancias.map(f => `<option value="${f}">${f}</option>`).join('');
-
-    atualizarOpcoesVolumetria(selectFrag);
-  }
-
-  function atualizarOpcoesVolumetria(selectFrag) {
-    const linha = selectFrag.parentElement.parentElement;
-    const tipoSel = linha.querySelector('.sel-tipo').value;
-    const fragSel = selectFrag.value;
-    const selectVol = linha.querySelector('.sel-vol');
-
-    if (!fragSel) {
-      selectVol.innerHTML = '<option value="">Volum.</option>';
-      linha.querySelector('.preco').value = '';
-      return;
-    }
-
-    const opcoes = catalogoGlobal.filter(c => c.tipo === tipoSel && c.fragrancia === fragSel);
-    selectVol.innerHTML = opcoes.map(o => `<option value="${o.volumetria}" data-preco="${o.preco}" ${o.volumetria === '50 ml' ? 'selected' : ''}>${o.volumetria}</option>`).join('');
-
-    atualizarPrecoEVolumetria(selectVol);
-  }
-
-  function atualizarPrecoEVolumetria(selectVol) {
-    const linha = selectVol.parentElement.parentElement;
-    const opt = selectVol.options[selectVol.selectedIndex];
-    if (opt) {
-      const preco = opt.getAttribute('data-preco') || 0;
-      linha.querySelector('.preco').value = parseFloat(preco).toFixed(2);
-    }
-  }
-
-  function removerLinha(btn) {
-    btn.parentElement.remove();
-    calcularTotais();
-  }
-
-  function calcularTotais() {
-    let subtotal = 0;
-    const linhas = document.querySelectorAll('.item-linha');
-    linhas.forEach(l => {
-      const qtd = parseFloat(l.querySelector('.qtd').value) || 0;
-      const preco = parseFloat(l.querySelector('.preco').value) || 0;
-      subtotal += (qtd * preco);
-    });
-
-    const desconto = parseFloat(document.getElementById('descontoTotal').value) || 0;
-    const totalFinal = Math.max(0, subtotal - desconto);
-    document.getElementById('labelTotalFinal').innerText = totalFinal.toFixed(2).replace('.', ',');
-  }
-
-  function cadastrarNovoVendedor() {
-    const user = prompt("Nome do novo Vendedor:");
-    if(!user) return;
-    const pass = prompt("Senha para o novo Vendedor:");
-    if(!pass) return;
-
-    google.script.run.withSuccessHandler(() => {
-      alert("Vendedor cadastrado com sucesso!");
-    }).cadastrarVendedor(user, pass);
-  }
-
-  function salvarVenda() {
-    const cliente = document.getElementById('clienteNome').value.trim();
-    if(!cliente) return alert("Preencha o nome do cliente.");
-
-    const itens = [];
-    let subtotal = 0;
-    const linhas = document.querySelectorAll('.item-linha');
-
-    linhas.forEach(l => {
-      const tipo = l.querySelector('.sel-tipo').value;
-      const frag = l.querySelector('.sel-frag').value;
-      const vol = l.querySelector('.sel-vol').value;
-      const qtd = parseFloat(l.querySelector('.qtd').value) || 0;
-      const unit = parseFloat(l.querySelector('.preco').value) || 0;
-      const stItem = l.querySelector('.sel-status-item').value;
-      const stPagItem = l.querySelector('.sel-status-pag-item').value;
-
-      if(frag && qtd > 0) {
-        itens.push({
-          tipo: tipo,
-          fragrancia: frag,
-          volumetria: vol,
-          qtd: qtd,
-          unitario: unit,
-          statusItem: stItem,
-          statusPagamentoItem: stPagItem
+    async function chamarAPI(acao, dados = {}) {
+      try {
+        const resposta = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ acao: acao, ...dados })
         });
-        subtotal += (qtd * unit);
+        return await resposta.json();
+      } catch (erro) {
+        console.error("Erro na comunicação com a API:", erro);
+        return { sucesso: false, erro: "Falha na conexão com o servidor." };
       }
-    });
+    }
 
-    if(itens.length === 0) return alert("Selecione pelo menos uma fragrância válida.");
+    function exibirToast(mensagem) {
+      var toast = document.getElementById("toast-notification");
+      toast.innerText = mensagem;
+      toast.className = "show";
+      
+      setTimeout(function() { 
+        toast.className = toast.className.replace("show", ""); 
+      }, 2500);
+    }
 
-    const desconto = parseFloat(document.getElementById('descontoTotal').value) || 0;
+    const NOME_ADMINISTRADOR = "RODRIGO";
 
-    const dadosVenda = {
-      vendedor: usuarioLogado,
-      cliente: cliente,
-      dataAgendamento: document.getElementById('dataAgendamento').value,
-      formaPagamento: document.getElementById('formaPagamento').value,
-      infoAgendamento: document.getElementById('infoAgendamento').value,
-      desconto: desconto,
-      totalBruto: subtotal,
-      totalLiquido: Math.max(0, subtotal - desconto),
-      itens: itens
+    let catalogoGlobal = [];
+    let mapaClientesGlobal = {};
+    let usuarioLogado = "";
+    let cacheVendas = [];
+    let filtroStatusAtual = 'TODOS';
+
+    async function fazerLogin() {
+      const u = document.getElementById('loginUsuario').value;
+      const s = document.getElementById('loginSenha').value;
+
+      if (!u || !s) return alert("Por favor, preencha usuário e senha.");
+
+      const res = await chamarAPI("autenticarUsuario", { usuario: u, senha: s });
+
+      if (!res.sucesso) return alert("Erro: " + res.erro);
+
+      usuarioLogado = res.usuario;
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('appScreen').style.display = 'block';
+      document.getElementById('vendedorLogado').value = usuarioLogado;
+      document.getElementById('labelUsuarioLogado').innerText = "👤 VENDEDOR: " + usuarioLogado.toUpperCase();
+
+      const eAdmin = usuarioLogado.toUpperCase().trim() === NOME_ADMINISTRADOR.toUpperCase().trim();
+      document.getElementById('btnNovoVend').style.display = eAdmin ? 'block' : 'none';
+      document.getElementById('boxFiltroVendedor').style.display = eAdmin ? 'block' : 'none';
+
+      await buscarDadosIniciais();
+      adicionarLinhaProduto();
+      carregarPainelControle();
+    }
+
+    async function buscarDadosIniciais() {
+      const res = await chamarAPI("buscarDadosIniciais");
+      if (res.sucesso) {
+        catalogoGlobal = res.catalogo || [];
+        mapaClientesGlobal = res.clientes || {};
+        preencherDatalistClientesCadastro();
+      } else {
+        console.error("Erro ao carregar dados iniciais:", res.erro);
+      }
+    }
+
+    window.onload = function() {
+      buscarDadosIniciais();
     };
 
-    google.script.run.withSuccessHandler(res => {
-      exibirToast("✓ Venda " + res.id + " salva com sucesso!");
-      document.getElementById('clienteNome').value = '';
-      document.getElementById('clienteTelefone').value = '';
-      document.getElementById('dataAgendamento').value = '';
-      document.getElementById('formaPagamento').value = 'PIX';
-      document.getElementById('infoAgendamento').value = '';
-      document.getElementById('containerItens').innerHTML = '';
-      document.getElementById('descontoTotal').value = '0';
-      adicionarLinhaProduto();
-      calcularTotais();
-      carregarPainelControle();
-    }).registrarVenda(dadosVenda);
-  }
+    function preencherDatalistClientesCadastro() {
+      const datalist = document.getElementById('listaClientesCadastro');
+      if (!datalist) return;
+      datalist.innerHTML = '';
+      
+      Object.keys(mapaClientesGlobal).forEach(nome => {
+        datalist.innerHTML += `<option value="${nome}">`;
+      });
+    }
 
-  function carregarPainelControle() {
-    google.script.run.withSuccessHandler(res => {
-      cacheVendas = res;
-      preencherFiltroVendedores();
-      preencherFiltroClientes();
-      preencherFiltroMeses();
-      aplicarFiltros();
-    }).buscarPainelControle();
-  }
+    function buscarTelefoneClienteAutomatico() {
+      const nomeInput = document.getElementById('clienteNome').value.trim().toUpperCase();
+      const campoTelefone = document.getElementById('clienteTelefone');
 
-  function preencherFiltroVendedores() {
-    const datalist = document.getElementById('listaVendedores');
-    if (!datalist) return;
-    const vendedores = [...new Set(cacheVendas.map(v => v.vendedor).filter(Boolean))];
-    
-    datalist.innerHTML = '';
-    vendedores.forEach(v => {
-      datalist.innerHTML += `<option value="${v}">`;
-    });
-  }
-
-  // PREENCHE A LISTA DE SUGESTÕES DE CLIENTES
-  function preencherFiltroClientes() {
-    const datalist = document.getElementById('listaClientes');
-    if (!datalist) return;
-    const clientes = [...new Set(cacheVendas.map(v => v.cliente).filter(Boolean))];
-    
-    datalist.innerHTML = '';
-    clientes.forEach(c => {
-      datalist.innerHTML += `<option value="${c}">`;
-    });
-  }
-
-  function preencherFiltroMeses() {
-    const select = document.getElementById('selectFiltroMes');
-    const mesesSet = new Set();
-
-    cacheVendas.forEach(v => {
-      if(v.data) {
-        let p = v.data.split('/');
-        if(p.length === 3) mesesSet.add(`${p[1]}/${p[2]}`);
+      if (mapaClientesGlobal[nomeInput]) {
+        const info = mapaClientesGlobal[nomeInput];
+        campoTelefone.value = typeof info === 'object' ? (info.telefone || info.fone || '') : info;
+      } else {
+        campoTelefone.value = '';
       }
-    });
-
-    select.innerHTML = '<option value="TODOS">Todos os Meses</option>';
-    Array.from(mesesSet).sort().reverse().forEach(m => {
-      select.innerHTML += `<option value="${m}">${m}</option>`;
-    });
-  }
-
-  function setFiltroStatus(tipo) {
-    filtroStatusAtual = tipo;
-    aplicarFiltros();
-  }
-
-  function aplicarFiltros() {
-    if (!cacheVendas) return;
-
-    const eAdmin = usuarioLogado.toUpperCase().trim() === NOME_ADMINISTRADOR.toUpperCase().trim();
-    let filtradas = eAdmin ? cacheVendas : cacheVendas.filter(v => v.vendedor.toUpperCase().trim() === usuarioLogado.toUpperCase().trim());
-
-    // FILTRO DINÂMICO DE VENDEDOR
-    const inputVend = document.getElementById('inputFiltroVendedor');
-    const vendBusca = inputVend ? inputVend.value.trim().toUpperCase() : '';
-    if (eAdmin && vendBusca !== '') {
-      filtradas = filtradas.filter(v => v.vendedor && v.vendedor.toUpperCase().includes(vendBusca));
     }
 
-    // FILTRO DINÂMICO DE CLIENTE
-    const inputCli = document.getElementById('inputFiltroCliente');
-    const cliBusca = inputCli ? inputCli.value.trim().toUpperCase() : '';
-    if (cliBusca !== '') {
-      filtradas = filtradas.filter(v => v.cliente && v.cliente.toUpperCase().includes(cliBusca));
+    async function cadastrarNovoCliente() {
+      const nome = prompt("Nome do cliente:");
+      if (!nome) return;
+      const telefone = prompt("Telefone / WhatsApp (apenas números):") || "";
+      const obs = prompt("Observações (opcional):") || "";
+
+      const dados = { nome: nome.trim(), telefone: telefone, endereco: obs };
+
+      const res = await chamarAPI("cadastrarCliente", { dados: dados });
+
+      if (res.sucesso) {
+        alert("Cliente cadastrado com sucesso!");
+        const nomeUpper = dados.nome.toUpperCase();
+        document.getElementById('clienteNome').value = nomeUpper;
+        document.getElementById('clienteTelefone').value = dados.telefone;
+        
+        mapaClientesGlobal[nomeUpper] = { telefone: dados.telefone };
+        preencherDatalistClientesCadastro();
+      } else {
+        alert("Erro ao cadastrar cliente: " + (res.erro || "Falha desconhecida."));
+      }
     }
 
-    // FILTRO DE MÊS
-    const mesSel = document.getElementById('selectFiltroMes').value;
-    if (mesSel !== 'TODOS') {
-      filtradas = filtradas.filter(v => v.data && v.data.includes(`/${mesSel}`));
+    function adicionarLinhaProduto() {
+      const container = document.getElementById('containerItens');
+      const div = document.createElement('div');
+      div.className = 'item-linha';
+
+      const tipos = [...new Set(catalogoGlobal.map(c => c.tipo))];
+      let optTipos = tipos.map(t => `<option value="${t}" ${t === 'Perfume' ? 'selected' : ''}>${t}</option>`).join('');
+
+      div.innerHTML = `
+        <div class="col-tipo">
+          <select class="sel-tipo" onchange="atualizarOpcoesFragrancia(this); calcularTotais();">
+            ${optTipos}
+          </select>
+        </div>
+        <div class="col-frag">
+          <select class="sel-frag" onchange="atualizarOpcoesVolumetria(this); calcularTotais();">
+            <option value="">Selecione Fragrância...</option>
+          </select>
+        </div>
+        <div class="col-vol">
+          <select class="sel-vol" onchange="atualizarPrecoEVolumetria(this); calcularTotais();">
+            <option value="">Volum.</option>
+          </select>
+        </div>
+        <div class="col-qtd">
+          <input type="number" value="1" min="1" placeholder="Qtd" oninput="calcularTotais()" class="qtd">
+        </div>
+        <div class="col-preco">
+          <input type="number" placeholder="Unit (R$)" step="0.01" oninput="calcularTotais()" class="preco">
+        </div>
+        <div class="col-status-ent">
+          <label style="font-size: 9px; margin-bottom: 2px;">Entrega</label>
+          <select class="sel-status-item">
+            <option value="Pendente" selected>Não Entregue</option>
+            <option value="Entregue">Entregue</option>
+          </select>
+        </div>
+        <div class="col-status-pag">
+          <label style="font-size: 9px; margin-bottom: 2px;">Pagamento</label>
+          <select class="sel-status-pag-item">
+            <option value="Pendente" selected>Pendente</option>
+            <option value="Pago">Pago</option>
+            <option value="Agendado">Agendado</option>
+          </select>
+        </div>
+        <button type="button" class="btn-remove" onclick="removerLinha(this)">X</button>
+      `;
+
+      container.appendChild(div);
+      atualizarOpcoesFragrancia(div.querySelector('.sel-tipo'));
     }
 
-    // FILTRO DE STATUS
-    if (filtroStatusAtual === 'PENDENTES_PAG') {
-      filtradas = filtradas.filter(v => String(v.statusPagamento).toLowerCase() !== 'pago');
-    } else if (filtroStatusAtual === 'PENDENTES_ENT') {
-      filtradas = filtradas.filter(v => String(v.statusEntrega).toLowerCase() !== 'entregue');
-    } else if (filtroStatusAtual === 'PAGOS') {
-      filtradas = filtradas.filter(v => String(v.statusPagamento).toLowerCase() === 'pago');
+    function atualizarOpcoesFragrancia(selectTipo) {
+      const linha = selectTipo.parentElement.parentElement;
+      const tipoSel = selectTipo.value;
+      const selectFrag = linha.querySelector('.sel-frag');
+
+      const fragrancias = [...new Set(catalogoGlobal.filter(c => c.tipo === tipoSel).map(c => c.fragrancia))];
+      selectFrag.innerHTML = '<option value="">Selecione Fragrância...</option>' + 
+        fragrancias.map(f => `<option value="${f}">${f}</option>`).join('');
+
+      atualizarOpcoesVolumetria(selectFrag);
     }
 
-    renderizarTabelaControle(filtradas);
-  }
+    function atualizarOpcoesVolumetria(selectFrag) {
+      const linha = selectFrag.parentElement.parentElement;
+      const tipoSel = linha.querySelector('.sel-tipo').value;
+      const fragSel = selectFrag.value;
+      const selectVol = linha.querySelector('.sel-vol');
 
-  function renderizarTabelaControle(vendasExibidas) {
-    const tbody = document.getElementById('tabelaControle');
+      if (!fragSel) {
+        selectVol.innerHTML = '<option value="">Volum.</option>';
+        linha.querySelector('.preco').value = '';
+        return;
+      }
 
-    if (!vendasExibidas || vendasExibidas.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Nenhuma venda encontrada.</td></tr>';
-      return;
+      const opcoes = catalogoGlobal.filter(c => c.tipo === tipoSel && c.fragrancia === fragSel);
+      selectVol.innerHTML = opcoes.map(o => `<option value="${o.volumetria}" data-preco="${o.preco}" ${o.volumetria === '50 ml' ? 'selected' : ''}>${o.volumetria}</option>`).join('');
+
+      atualizarPrecoEVolumetria(selectVol);
     }
 
-    const totalSubtotal = vendasExibidas.reduce((acc, v) => acc + (parseFloat(v.totalLiquido) || 0), 0);
-    const totalComissao = totalSubtotal * 0.20;
+    function atualizarPrecoEVolumetria(selectVol) {
+      const linha = selectVol.parentElement.parentElement;
+      const opt = selectVol.options[selectVol.selectedIndex];
+      if (opt) {
+        const preco = opt.getAttribute('data-preco') || 0;
+        linha.querySelector('.preco').value = parseFloat(preco).toFixed(2);
+      }
+    }
 
-    let html = `
-      <tr class="linha-subtotal">
-        <td colspan="3"><b>SUBTOTAL DA SELEÇÃO:</b></td>
-        <td><b>R$ ${totalSubtotal.toFixed(2).replace('.', ',')}</b></td>
-        <td colspan="4">
-          Comissão (20%): <b>R$ ${totalComissao.toFixed(2).replace('.', ',')}</b> | 
-          Registros: <b>${vendasExibidas.length}</b>
-        </td>
-      </tr>
-    `;
+    function removerLinha(btn) {
+      btn.parentElement.remove();
+      calcularTotais();
+    }
 
-    html += vendasExibidas.map(v => {
-      const msgWa = encodeURIComponent(`Olá ${v.cliente}, lembrete da venda ${v.id}. Total: R$ ${Number(v.totalLiquido).toFixed(2)}.`);
-      const foneLimpo = (v.telefone || '').replace(/\D/g, '');
-      const btnWa = foneLimpo ? `<a class="btn-sm btn-green" href="https://wa.me/55${foneLimpo}?text=${msgWa}" target="_blank">Enviar PIX</a>` : 'Sem Tel';
+    function calcularTotais() {
+      let subtotal = 0;
+      const linhas = document.querySelectorAll('.item-linha');
+      linhas.forEach(l => {
+        const qtd = parseFloat(l.querySelector('.qtd').value) || 0;
+        const preco = parseFloat(l.querySelector('.preco').value) || 0;
+        subtotal += (qtd * preco);
+      });
 
-      const pag = String(v.statusPagamento).trim();
-      const ent = String(v.statusEntrega).trim();
+      const desconto = parseFloat(document.getElementById('descontoTotal').value) || 0;
+      const totalFinal = Math.max(0, subtotal - desconto);
+      document.getElementById('labelTotalFinal').innerText = totalFinal.toFixed(2).replace('.', ',');
+    }
 
-      return `
-        <tr>
-          <td><b>${v.id}</b></td>
-          <td>${v.vendedor}</td>
-          <td>${v.cliente}</td>
-          <td>R$ ${Number(v.totalLiquido).toFixed(2).replace('.', ',')}</td>
-          <td>${v.dataAgendamento || '-'}</td>
-          <td>
-            <select onchange="mudarStatus(${v.linha}, 'pagamento', this.value)">
-              <option value="Agendado" ${pag.toLowerCase()=='agendado'?'selected':''}>Agendado</option>
-              <option value="Pago" ${pag.toLowerCase()=='pago'?'selected':''}>Pago</option>
-              <option value="Pendente" ${pag.toLowerCase()=='pendente'?'selected':''}>Pendente</option>
-            </select>
+    async function cadastrarNovoVendedor() {
+      const user = prompt("Nome do novo Vendedor:");
+      if(!user) return;
+      const pass = prompt("Senha para o novo Vendedor:");
+      if(!pass) return;
+
+      const res = await chamarAPI("cadastrarVendedor", { usuario: user, senha: pass });
+
+      if (res.sucesso) {
+        alert("Vendedor cadastrado com sucesso!");
+      } else {
+        alert("Erro ao cadastrar vendedor: " + (res.erro || "Falha desconhecida."));
+      }
+    }
+
+    async function salvarVenda() {
+      const cliente = document.getElementById('clienteNome').value.trim();
+      if(!cliente) return alert("Preencha o nome do cliente.");
+
+      const itens = [];
+      let subtotal = 0;
+      const linhas = document.querySelectorAll('.item-linha');
+
+      linhas.forEach(l => {
+        const tipo = l.querySelector('.sel-tipo').value;
+        const frag = l.querySelector('.sel-frag').value;
+        const vol = l.querySelector('.sel-vol').value;
+        const qtd = parseFloat(l.querySelector('.qtd').value) || 0;
+        const unit = parseFloat(l.querySelector('.preco').value) || 0;
+        const stItem = l.querySelector('.sel-status-item').value;
+        const stPagItem = l.querySelector('.sel-status-pag-item').value;
+
+        if(frag && qtd > 0) {
+          itens.push({
+            tipo: tipo,
+            fragrancia: frag,
+            volumetria: vol,
+            qtd: qtd,
+            unitario: unit,
+            statusItem: stItem,
+            statusPagamentoItem: stPagItem
+          });
+          subtotal += (qtd * unit);
+        }
+      });
+
+      if(itens.length === 0) return alert("Selecione pelo menos uma fragrância válida.");
+
+      const desconto = parseFloat(document.getElementById('descontoTotal').value) || 0;
+
+      const dadosVenda = {
+        vendedor: usuarioLogado,
+        cliente: cliente,
+        dataAgendamento: document.getElementById('dataAgendamento').value,
+        formaPagamento: document.getElementById('formaPagamento').value,
+        infoAgendamento: document.getElementById('infoAgendamento').value,
+        desconto: desconto,
+        totalBruto: subtotal,
+        totalLiquido: Math.max(0, subtotal - desconto),
+        itens: itens
+      };
+
+      const res = await chamarAPI("registrarVenda", { dadosVenda: dadosVenda });
+
+      if (res.sucesso) {
+        exibirToast("✓ Venda " + (res.id || '') + " salva com sucesso!");
+        document.getElementById('clienteNome').value = '';
+        document.getElementById('clienteTelefone').value = '';
+        document.getElementById('dataAgendamento').value = '';
+        document.getElementById('formaPagamento').value = 'PIX';
+        document.getElementById('infoAgendamento').value = '';
+        document.getElementById('containerItens').innerHTML = '';
+        document.getElementById('descontoTotal').value = '0';
+        adicionarLinhaProduto();
+        calcularTotais();
+        carregarPainelControle();
+      } else {
+        alert("Erro ao salvar venda: " + (res.erro || "Falha desconhecida."));
+      }
+    }
+
+    async function carregarPainelControle() {
+      const res = await chamarAPI("buscarPainelControle");
+      if (res.sucesso) {
+        cacheVendas = res.dados || res.vendas || res;
+        if (Array.isArray(cacheVendas)) {
+          preencherFiltroVendedores();
+          preencherFiltroClientes();
+          preencherFiltroMeses();
+          aplicarFiltros();
+        }
+      } else {
+        console.error("Erro ao carregar painel:", res.erro);
+      }
+    }
+
+    function preencherFiltroVendedores() {
+      const datalist = document.getElementById('listaVendedores');
+      if (!datalist) return;
+      const vendedores = [...new Set(cacheVendas.map(v => v.vendedor).filter(Boolean))];
+      
+      datalist.innerHTML = '';
+      vendedores.forEach(v => {
+        datalist.innerHTML += `<option value="${v}">`;
+      });
+    }
+
+    function preencherFiltroClientes() {
+      const datalist = document.getElementById('listaClientes');
+      if (!datalist) return;
+      const clientes = [...new Set(cacheVendas.map(v => v.cliente).filter(Boolean))];
+      
+      datalist.innerHTML = '';
+      clientes.forEach(c => {
+        datalist.innerHTML += `<option value="${c}">`;
+      });
+    }
+
+    function preencherFiltroMeses() {
+      const select = document.getElementById('selectFiltroMes');
+      const mesesSet = new Set();
+
+      cacheVendas.forEach(v => {
+        if(v.data) {
+          let p = v.data.split('/');
+          if(p.length === 3) mesesSet.add(`${p[1]}/${p[2]}`);
+        }
+      });
+
+      select.innerHTML = '<option value="TODOS">Todos os Meses</option>';
+      Array.from(mesesSet).sort().reverse().forEach(m => {
+        select.innerHTML += `<option value="${m}">${m}</option>`;
+      });
+    }
+
+    function setFiltroStatus(tipo) {
+      filtroStatusAtual = tipo;
+      aplicarFiltros();
+    }
+
+    function aplicarFiltros() {
+      if (!cacheVendas || !Array.isArray(cacheVendas)) return;
+
+      const eAdmin = usuarioLogado.toUpperCase().trim() === NOME_ADMINISTRADOR.toUpperCase().trim();
+      let filtradas = eAdmin ? cacheVendas : cacheVendas.filter(v => v.vendedor && v.vendedor.toUpperCase().trim() === usuarioLogado.toUpperCase().trim());
+
+      const inputVend = document.getElementById('inputFiltroVendedor');
+      const vendBusca = inputVend ? inputVend.value.trim().toUpperCase() : '';
+      if (eAdmin && vendBusca !== '') {
+        filtradas = filtradas.filter(v => v.vendedor && v.vendedor.toUpperCase().includes(vendBusca));
+      }
+
+      const inputCli = document.getElementById('inputFiltroCliente');
+      const cliBusca = inputCli ? inputCli.value.trim().toUpperCase() : '';
+      if (cliBusca !== '') {
+        filtradas = filtradas.filter(v => v.cliente && v.cliente.toUpperCase().includes(cliBusca));
+      }
+
+      const mesSel = document.getElementById('selectFiltroMes').value;
+      if (mesSel !== 'TODOS') {
+        filtradas = filtradas.filter(v => v.data && v.data.includes(`/${mesSel}`));
+      }
+
+      if (filtroStatusAtual === 'PENDENTES_PAG') {
+        filtradas = filtradas.filter(v => String(v.statusPagamento).toLowerCase() !== 'pago');
+      } else if (filtroStatusAtual === 'PENDENTES_ENT') {
+        filtradas = filtradas.filter(v => String(v.statusEntrega).toLowerCase() !== 'entregue');
+      } else if (filtroStatusAtual === 'PAGOS') {
+        filtradas = filtradas.filter(v => String(v.statusPagamento).toLowerCase() === 'pago');
+      }
+
+      renderizarTabelaControle(filtradas);
+    }
+
+    function renderizarTabelaControle(vendasExibidas) {
+      const tbody = document.getElementById('tabelaControle');
+
+      if (!vendasExibidas || vendasExibidas.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Nenhuma venda encontrada.</td></tr>';
+        return;
+      }
+
+      const totalSubtotal = vendasExibidas.reduce((acc, v) => acc + (parseFloat(v.totalLiquido) || 0), 0);
+      const totalComissao = totalSubtotal * 0.20;
+
+      let html = `
+        <tr class="linha-subtotal">
+          <td colspan="3"><b>SUBTOTAL DA SELEÇÃO:</b></td>
+          <td><b>R$ ${totalSubtotal.toFixed(2).replace('.', ',')}</b></td>
+          <td colspan="4">
+            Comissão (20%): <b>R$ ${totalComissao.toFixed(2).replace('.', ',')}</b> | 
+            Registros: <b>${vendasExibidas.length}</b>
           </td>
-          <td>
-            <select onchange="mudarStatus(${v.linha}, 'entrega', this.value)">
-              <option value="Pendente" ${ent.toLowerCase()=='pendente'?'selected':''}>Pendente</option>
-              <option value="Entregue" ${ent.toLowerCase()=='entregue'?'selected':''}>Entregue</option>
-            </select>
-          </td>
-          <td>${btnWa}</td>
         </tr>
       `;
-    }).join('');
 
-    tbody.innerHTML = html;
-  }
+      html += vendasExibidas.map(v => {
+        const msgWa = encodeURIComponent(`Olá ${v.cliente}, lembrete da venda ${v.id}. Total: R$ ${Number(v.totalLiquido).toFixed(2)}.`);
+        const foneLimpo = (v.telefone || '').replace(/\D/g, '');
+        const btnWa = foneLimpo ? `<a class="btn-sm btn-green" href="https://wa.me/55${foneLimpo}?text=${msgWa}" target="_blank">Enviar PIX</a>` : 'Sem Tel';
 
-  function mudarStatus(linha, tipo, valor) {
-    google.script.run.atualizarStatusVenda(linha, tipo, valor);
-  }
-</script>
+        const pag = String(v.statusPagamento || '').trim();
+        const ent = String(v.statusEntrega || '').trim();
 
+        return `
+          <tr>
+            <td><b>${v.id}</b></td>
+            <td>${v.vendedor}</td>
+            <td>${v.cliente}</td>
+            <td>R$ ${Number(v.totalLiquido).toFixed(2).replace('.', ',')}</td>
+            <td>${v.dataAgendamento || '-'}</td>
+            <td>
+              <select onchange="mudarStatus(${v.linha}, 'pagamento', this.value)">
+                <option value="Agendado" ${pag.toLowerCase()=='agendado'?'selected':''}>Agendado</option>
+                <option value="Pago" ${pag.toLowerCase()=='pago'?'selected':''}>Pago</option>
+                <option value="Pendente" ${pag.toLowerCase()=='pendente'?'selected':''}>Pendente</option>
+              </select>
+            </td>
+            <td>
+              <select onchange="mudarStatus(${v.linha}, 'entrega', this.value)">
+                <option value="Pendente" ${ent.toLowerCase()=='pendente'?'selected':''}>Pendente</option>
+                <option value="Entregue" ${ent.toLowerCase()=='entregue'?'selected':''}>Entregue</option>
+              </select>
+            </td>
+            <td>${btnWa}</td>
+          </tr>
+        `;
+      }).join('');
+
+      tbody.innerHTML = html;
+    }
+
+    async function mudarStatus(linha, tipo, valor) {
+      const res = await chamarAPI("atualizarStatusVenda", { linha: linha, tipo: tipo, valor: valor });
+      if (res.sucesso) {
+        exibirToast("Status atualizado com sucesso!");
+      } else {
+        alert("Erro ao atualizar status: " + (res.erro || "Falha desconhecida."));
+      }
+    }
+  </script>
 </body>
 </html>
