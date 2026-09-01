@@ -769,13 +769,239 @@
       tbody.innerHTML = html;
     }
 
-    async function mudarStatus(linha, tipo, valor) {
-      const res = await chamarAPI("atualizarStatusVenda", { linha: linha, tipo: tipo, valor: valor });
-      if (res && res.sucesso) {
-        exibirToast("Status atualizado com sucesso!");
-      } else {
-        alert("Erro ao atualizar status: " + (res ? res.erro : "Falha desconhecida."));
+   <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbw9PqZASwgNfrMv-hXqssFG9vylTgxbqR7_dhBoNkiIhEFs64C8A8atE2aeso5z2Ejh/exec";
+    const NOME_ADMINISTRADOR = "RODRIGO";
+
+    let catalogoGlobal = [];
+    let mapaClientesGlobal = {};
+    let usuarioLogado = "";
+    let cacheVendas = [];
+    let filtroStatusAtual = 'TODOS';
+
+    async function chamarAPI(acao, dados = {}) {
+      try {
+        const resposta = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ acao: acao, ...dados })
+        });
+        const texto = await resposta.text();
+        return JSON.parse(texto);
+      } catch (erro) {
+        return { sucesso: false, erro: "Falha na conexão." };
       }
+    }
+
+    function exibirToast(mensagem) {
+      var toast = document.getElementById("toast-notification");
+      toast.innerText = mensagem;
+      toast.className = "show";
+      setTimeout(function() { toast.className = ""; }, 2500);
+    }
+
+    async function fazerLogin() {
+      const u = document.getElementById('loginUsuario').value;
+      const s = document.getElementById('loginSenha').value;
+      if (!u || !s) return alert("Preencha usuário e senha.");
+
+      const res = await chamarAPI("autenticarUsuario", { usuario: u, senha: s });
+      if (!res || !res.sucesso) return alert("Erro no login.");
+
+      usuarioLogado = res.usuario;
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('appScreen').style.display = 'block';
+      document.getElementById('vendedorLogado').value = usuarioLogado;
+      document.getElementById('labelUsuarioLogado').innerText = "👤 VENDEDOR: " + usuarioLogado.toUpperCase();
+
+      const eAdmin = usuarioLogado.toUpperCase().trim() === NOME_ADMINISTRADOR.toUpperCase().trim();
+      document.getElementById('btnNovoVend').style.display = eAdmin ? 'block' : 'none';
+      document.getElementById('boxFiltroVendedor').style.display = eAdmin ? 'block' : 'none';
+
+      await buscarDadosIniciais();
+      document.getElementById('containerItens').innerHTML = '';
+      adicionarLinhaProduto();
+      carregarPainelControle();
+    }
+
+    async function buscarDadosIniciais() {
+      const res = await chamarAPI("buscarDadosIniciais");
+      if (res && res.sucesso) {
+        catalogoGlobal = res.catalogo || res.dadosCatalogo || [];
+        mapaClientesGlobal = res.clientes || {};
+        preencherDatalistClientesCadastro();
+      }
+    }
+
+    function preencherDatalistClientesCadastro() {
+      const datalist = document.getElementById('listaClientesCadastro');
+      if (!datalist) return;
+      datalist.innerHTML = '';
+      Object.keys(mapaClientesGlobal).forEach(nome => {
+        const opt = document.createElement('option');
+        opt.value = nome;
+        datalist.appendChild(opt);
+      });
+    }
+
+    function buscarTelefoneClienteAutomatico() {
+      const nomeInput = document.getElementById('clienteNome').value.trim().toUpperCase();
+      const campoTelefone = document.getElementById('clienteTelefone');
+      if (mapaClientesGlobal[nomeInput]) {
+        const info = mapaClientesGlobal[nomeInput];
+        campoTelefone.value = typeof info === 'object' ? (info.telefone || '') : info;
+      } else {
+        campoTelefone.value = '';
+      }
+    }
+
+    function adicionarLinhaProduto() {
+      const container = document.getElementById('containerItens');
+      const div = document.createElement('div');
+      div.className = 'item-linha';
+      div.innerHTML = `
+        <div class="col-tipo"><select class="sel-tipo" onchange="atualizarOpcoesFragrancia(this); calcularTotais();"><option value="">Tipo...</option></select></div>
+        <div class="col-frag"><select class="sel-frag" onchange="atualizarOpcoesVolumetria(this); calcularTotais();"><option value="">Fragrância...</option></select></div>
+        <div class="col-vol"><select class="sel-vol" onchange="atualizarPrecoEVolumetria(this); calcularTotais();"><option value="">Vol.</option></select></div>
+        <div class="col-qtd"><input type="number" value="1" min="1" oninput="calcularTotais()" class="qtd"></div>
+        <div class="col-preco"><input type="number" placeholder="Unit" step="0.01" oninput="calcularTotais()" class="preco"></div>
+        <div class="col-status-ent"><select class="sel-status-item"><option value="Pendente" selected>Não Entregue</option><option value="Entregue">Entregue</option></select></div>
+        <div class="col-status-pag"><select class="sel-status-pag-item"><option value="Pendente" selected>Pendente</option><option value="Pago">Pago</option></select></div>
+        <button type="button" class="btn-remove" onclick="removerLinha(this)">X</button>
+      `;
+      container.appendChild(div);
+      atualizarOpcoesTipo(div.querySelector('.sel-tipo'));
+    }
+
+    function atualizarOpcoesTipo(selectTipo) {
+      if (!catalogoGlobal.length) return;
+      const tiposUnicos = [...new Set(catalogoGlobal.map(item => item.tipo || item.Tipo || item[0]).filter(Boolean))];
+      selectTipo.innerHTML = '<option value="">Tipo...</option>';
+      tiposUnicos.forEach(t => selectTipo.innerHTML += `<option value="${t}">${t}</option>`);
+      if (tiposUnicos.length) selectTipo.value = tiposUnicos[0];
+      atualizarOpcoesFragrancia(selectTipo);
+    }
+
+    function atualizarOpcoesFragrancia(selectTipo) {
+      const linha = selectTipo.closest('.item-linha');
+      const tipoSel = selectTipo.value;
+      const selectFrag = linha.querySelector('.sel-frag');
+      const filtrados = catalogoGlobal.filter(item => String(item.tipo || item[0]).trim() === String(tipoSel).trim());
+      const frags = [...new Set(filtrados.map(item => item.fragrancia || item[1]).filter(Boolean))];
+      selectFrag.innerHTML = '<option value="">Fragrância...</option>';
+      frags.forEach(f => selectFrag.innerHTML += `<option value="${f}">${f}</option>`);
+      atualizarOpcoesVolumetria(selectFrag);
+    }
+
+    function atualizarOpcoesVolumetria(selectFrag) {
+      const linha = selectFrag.closest('.item-linha');
+      const tipoSel = linha.querySelector('.sel-tipo').value;
+      const fragSel = selectFrag.value;
+      const selectVol = linha.querySelector('.sel-vol');
+      const opcoes = catalogoGlobal.filter(item => String(item.tipo || item[0]) === tipoSel && String(item.fragrancia || item[1]) === fragSel);
+      selectVol.innerHTML = opcoes.map(o => `<option value="${o.volumetria || o[2]}" data-preco="${o.preco || o[3]}">${o.volumetria || o[2]}</option>`).join('');
+      atualizarPrecoEVolumetria(selectVol);
+    }
+
+    function atualizarPrecoEVolumetria(selectVol) {
+      const linha = selectVol.closest('.item-linha');
+      const opt = selectVol.options[selectVol.selectedIndex];
+      if (opt) linha.querySelector('.preco').value = parseFloat(opt.getAttribute('data-preco') || 0).toFixed(2);
+    }
+
+    function removerLinha(btn) {
+      btn.parentElement.remove();
+      calcularTotais();
+    }
+
+    function calcularTotais() {
+      let subtotal = 0;
+      document.querySelectorAll('.item-linha').forEach(l => {
+        subtotal += (parseFloat(l.querySelector('.qtd').value) || 0) * (parseFloat(l.querySelector('.preco').value) || 0);
+      });
+      const desconto = parseFloat(document.getElementById('descontoTotal').value) || 0;
+      document.getElementById('labelTotalFinal').innerText = Math.max(0, subtotal - desconto).toFixed(2).replace('.', ',');
+    }
+
+    async function salvarVenda() {
+      const cliente = document.getElementById('clienteNome').value.trim();
+      if(!cliente) return alert("Preencha o cliente.");
+      const itens = [];
+      let subtotal = 0;
+      document.querySelectorAll('.item-linha').forEach(l => {
+        const qtd = parseFloat(l.querySelector('.qtd').value) || 0;
+        const unit = parseFloat(l.querySelector('.preco').value) || 0;
+        if(l.querySelector('.sel-frag').value && qtd > 0) {
+          itens.push({
+            tipo: l.querySelector('.sel-tipo').value,
+            fragrancia: l.querySelector('.sel-frag').value,
+            volumetria: l.querySelector('.sel-vol').value,
+            qtd: qtd,
+            unitario: unit,
+            statusItem: l.querySelector('.sel-status-item').value,
+            statusPagamentoItem: l.querySelector('.sel-status-pag-item').value
+          });
+          subtotal += (qtd * unit);
+        }
+      });
+      if(!itens.length) return alert("Adicione itens válidos.");
+      const desconto = parseFloat(document.getElementById('descontoTotal').value) || 0;
+      const res = await chamarAPI("registrarVenda", { dadosVenda: {
+        vendedor: usuarioLogado, cliente: cliente,
+        dataAgendamento: document.getElementById('dataAgendamento').value,
+        formaPagamento: document.getElementById('formaPagamento').value,
+        desconto: desconto, totalBruto: subtotal, totalLiquido: Math.max(0, subtotal - desconto), itens: itens
+      }});
+      if (res && res.sucesso) {
+        exibirToast("✓ Venda salva!");
+        document.getElementById('clienteNome').value = '';
+        document.getElementById('containerItens').innerHTML = '';
+        adicionarLinhaProduto();
+        carregarPainelControle();
+      } else { alert("Erro ao salvar."); }
+    }
+
+    async function carregarPainelControle() {
+      const res = await chamarAPI("buscarPainelControle");
+      if (res && res.sucesso) {
+        cacheVendas = res.dados || [];
+        aplicarFiltros();
+      }
+    }
+
+    function aplicarFiltros() {
+      if (!Array.isArray(cacheVendas)) return;
+      const eAdmin = usuarioLogado.toUpperCase().trim() === NOME_ADMINISTRADOR.toUpperCase().trim();
+      let filtradas = eAdmin ? cacheVendas : cacheVendas.filter(v => (v.vendedor || '').toUpperCase().trim() === usuarioLogado.toUpperCase().trim());
+      renderizarTabelaControle(filtradas);
+    }
+
+    function renderizarTabelaControle(vendasExibidas) {
+      const tbody = document.getElementById('tabelaControle');
+      if (!vendasExibidas.length) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Nenhuma venda.</td></tr>';
+        return;
+      }
+      const total = vendasExibidas.reduce((acc, v) => acc + (parseFloat(v.totalLiquido || v.valorLiquido) || 0), 0);
+      let html = `<tr class="linha-subtotal"><td colspan="3"><b>SUBTOTAL:</b></td><td><b>R$ ${total.toFixed(2).replace('.', ',')}</b></td><td colspan="4">Comissão: R$ ${(total*0.2).toFixed(2).replace('.', ',')}</td></tr>`;
+      html += vendasExibidas.map(v => `
+        <tr>
+          <td><b>${v.id}</b></td>
+          <td>${v.vendedor || '-'}</td>
+          <td>${v.cliente || '-'}</td>
+          <td>R$ ${(parseFloat(v.totalLiquido || v.valorLiquido) || 0).toFixed(2).replace('.', ',')}</td>
+          <td>${v.dataAgendamento || '-'}</td>
+          <td><select onchange="mudarStatus(${v.linha}, 'pagamento', this.value)"><option value="Pago" ${v.statusPagamento=='Pago'?'selected':''}>Pago</option><option value="Pendente" ${v.statusPagamento=='Pendente'?'selected':''}>Pendente</option></select></td>
+          <td><select onchange="mudarStatus(${v.linha}, 'entrega', this.value)"><option value="Entregue" ${v.statusEntrega=='Entregue'?'selected':''}>Entregue</option><option value="Pendente" ${v.statusEntrega=='Pendente'?'selected':''}>Pendente</option></select></td>
+          <td>-</td>
+        </tr>
+      `).join('');
+      tbody.innerHTML = html;
+    }
+
+    async function mudarStatus(linha, tipo, valor) {
+      await chamarAPI("atualizarStatusVenda", { linha: linha, tipo: tipo, valor: valor });
+      exibirToast("Atualizado!");
     }
   </script>
 </body>
