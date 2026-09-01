@@ -585,19 +585,20 @@
     }
 
     async function carregarPainelControle() {
-      const res = await chamarAPI("buscarPainelControle");
-      if (res && res.sucesso) {
-        cacheVendas = res.dados || res.vendas || [];
-        if (Array.isArray(cacheVendas)) {
-          preencherFiltroVendedores();
-          preencherFiltroClientes();
-          preencherFiltroMeses();
-          aplicarFiltros();
-        }
-      } else {
-        console.error("Erro ao carregar painel:", res);
-      }
+  const res = await chamarAPI("buscarPainelControle");
+  if (res && res.sucesso) {
+    // Lê exatamente o array 'dados' que o seu Apps Script envia
+    cacheVendas = res.dados || [];
+    if (Array.isArray(cacheVendas)) {
+      preencherFiltroVendedores();
+      preencherFiltroClientes();
+      preencherFiltroMeses();
+      aplicarFiltros();
     }
+  } else {
+    console.error("Erro ao carregar painel:", res);
+  }
+}
 
     function preencherFiltroVendedores() {
       const datalist = document.getElementById('listaVendedores');
@@ -672,26 +673,65 @@
     }
 
     function renderizarTabelaControle(vendasExibidas) {
-      const tbody = document.getElementById('tabelaControle');
+  const tbody = document.getElementById('tabelaControle');
 
-      if (!vendasExibidas || vendasExibidas.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Nenhuma venda encontrada.</td></tr>';
-        return;
-      }
+  if (!vendasExibidas || vendasExibidas.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Nenhuma venda encontrada.</td></tr>';
+    return;
+  }
 
-      const totalSubtotal = vendasExibidas.reduce((acc, v) => acc + (parseFloat(v.totalLiquido) || 0), 0);
-      const totalComissao = totalSubtotal * 0.20;
+  const totalSubtotal = vendasExibidas.reduce((acc, v) => acc + (parseFloat(v.totalLiquido || v.valorLiquido) || 0), 0);
+  const totalComissao = totalSubtotal * 0.20;
 
-      let html = `
-        <tr class="linha-subtotal">
-          <td colspan="3"><b>SUBTOTAL DA SELEÇÃO:</b></td>
-          <td><b>R$ ${totalSubtotal.toFixed(2).replace('.', ',')}</b></td>
-          <td colspan="4">
-            Comissão (20%): <b>R$ ${totalComissao.toFixed(2).replace('.', ',')}</b> | 
-            Registros: <b>${vendasExibidas.length}</b>
-          </td>
-        </tr>
-      `;
+  let html = `
+    <tr class="linha-subtotal">
+      <td colspan="3"><b>SUBTOTAL DA SELEÇÃO:</b></td>
+      <td><b>R$ ${totalSubtotal.toFixed(2).replace('.', ',')}</b></td>
+      <td colspan="4">
+        Comissão (20%): <b>R$ ${totalComissao.toFixed(2).replace('.', ',')}</b> | 
+        Registros: <b>${vendasExibidas.length}</b>
+      </td>
+    </tr>
+  `;
+
+  html += vendasExibidas.map(v => {
+    const clienteNome = v.cliente || '-';
+    const vendedorNome = v.vendedor || v.usuarioVendedor || '-';
+    const valorLiq = parseFloat(v.totalLiquido || v.valorLiquido || 0);
+    const msgWa = encodeURIComponent(`Olá ${clienteNome}, lembrete da venda ${v.id}. Total: R$ ${valorLiq.toFixed(2)}.`);
+    const foneLimpo = (v.telefone || '').replace(/\D/g, '');
+    const btnWa = foneLimpo ? `<a class="btn-sm btn-green" href="https://wa.me/55${foneLimpo}?text=${msgWa}" target="_blank">Enviar PIX</a>` : 'Sem Tel';
+
+    const pag = String(v.statusPagamento || v.statusDePagamento || '').trim();
+    const ent = String(v.statusEntrega || v.statusDeEntrega || '').trim();
+
+    return `
+      <tr>
+        <td><b>${v.id}</b></td>
+        <td>${vendedorNome}</td>
+        <td>${clienteNome}</td>
+        <td>R$ ${valorLiq.toFixed(2).replace('.', ',')}</td>
+        <td>${v.dataAgendamento || v.dataDeAgendamento || '-'}</td>
+        <td>
+          <select onchange="mudarStatus(${v.linha}, 'pagamento', this.value)">
+            <option value="Agendado" ${pag.toLowerCase()=='agendado'?'selected':''}>Agendado</option>
+            <option value="Pago" ${pag.toLowerCase()=='pago'?'selected':''}>Pago</option>
+            <option value="Pendente" ${pag.toLowerCase()=='pendente'?'selected':''}>Pendente</option>
+          </select>
+        </td>
+        <td>
+          <select onchange="mudarStatus(${v.linha}, 'entrega', this.value)">
+            <option value="Pendente" ${ent.toLowerCase()=='pendente'?'selected':''}>Pendente</option>
+            <option value="Entregue" ${ent.toLowerCase()=='entregue'?'selected':''}>Entregue</option>
+          </select>
+        </td>
+        <td>${btnWa}</td>
+      </tr>
+    `;
+  }).join('');
+
+  tbody.innerHTML = html;
+}
 
       html += vendasExibidas.map(v => {
         const msgWa = encodeURIComponent(`Olá ${v.cliente}, lembrete da venda ${v.id}. Total: R$ ${Number(v.totalLiquido).toFixed(2)}.`);
