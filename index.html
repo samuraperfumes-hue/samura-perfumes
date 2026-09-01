@@ -349,18 +349,20 @@
     const API_URL = "https://script.google.com/macros/s/AKfycbw9PqZASwgNfrMv-hXqssFG9vylTgxbqR7_dhBoNkiIhEFs64C8A8atE2aeso5z2Ejh/exec";
 
     async function chamarAPI(acao, dados = {}) {
-      try {
-        const resposta = await fetch(API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ acao: acao, ...dados })
-        });
-        return await resposta.json();
-      } catch (erro) {
-        console.error("Erro na comunicação com a API:", erro);
-        return { sucesso: false, erro: "Falha na conexão com o servidor." };
-      }
-    }
+  try {
+    const resposta = await fetch(API_URL, {
+      method: 'POST',
+      redirect: 'follow',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ acao: acao, ...dados })
+    });
+    
+    return await resposta.json();
+  } catch (erro) {
+    console.error("Erro na comunicação com a API:", erro);
+    return { sucesso: false, erro: erro.toString() };
+  }
+}
 
     function exibirToast(mensagem) {
       var toast = document.getElementById("toast-notification");
