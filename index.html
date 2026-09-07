@@ -1,131 +1,366 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Samura Perfumes - Sistema</title>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Tags para transformar em App (PWA) usando a logo do GitHub -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Samura Perfumes">
+  <meta name="theme-color" content="#0b0b0b">
+  <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/samuraperfumes-hue/samura-perfumes/main/logo.png">
+  <link rel="icon" href="https://raw.githubusercontent.com/samuraperfumes-hue/samura-perfumes/main/logo.png" type="image/png">
+  
+  <title>Samura Perfumes - Sistema de Gestão</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #0c0c0c; color: #fff; margin: 0; padding: 20px; }
-    .container { max-width: 900px; margin: 0 auto; background: #1a1a1a; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(255,215,0,0.3); }
-    h2 { color: #ffd700; text-align: center; }
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Montserrat:wght@300;400;600&display=swap');
+
+    * { box-sizing: border-box; }
+    body { 
+      background-color: #0b0b0b; 
+      color: #e0e0e0; 
+      font-family: 'Montserrat', sans-serif; 
+      margin: 0; 
+      padding: 15px; 
+    }
+    .container { max-width: 1050px; margin: 0 auto; }
+    
+    /* Header e Logo Oficial */
+    .brand-header { 
+      text-align: center; 
+      margin-bottom: 25px; 
+      padding: 15px;
+      border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+    }
+    .brand-logo { 
+      max-width: 220px; 
+      height: auto; 
+      filter: drop-shadow(0px 4px 10px rgba(212, 175, 55, 0.2)); 
+    }
+
+    /* Cards com Estilo Dourado Elegante */
+    .card { 
+      background: #141414; 
+      border: 1px solid #332A15; 
+      border-top: 3px solid #D4AF37; 
+      padding: 22px; 
+      border-radius: 8px; 
+      box-shadow: 0 6px 15px rgba(0,0,0,0.7); 
+      margin-bottom: 20px; 
+    }
+    h2, h3 { 
+      font-family: 'Cinzel', serif; 
+      color: #D4AF37; 
+      margin-top: 0; 
+      letter-spacing: 1px;
+    }
+    
+    /* Formulários e Inputs */
     .form-group { margin-bottom: 15px; }
-    label { display: block; margin-bottom: 5px; color: #ccc; }
-    input, select { width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #444; background: #222; color: #fff; box-sizing: border-box; }
-    button { background: #ffd700; color: #000; border: none; padding: 10px 15px; border-radius: 4px; font-weight: bold; cursor: pointer; width: 100%; }
-    button:hover { background: #e6c200; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #444; padding: 8px; text-align: left; font-size: 14px; }
-    th { background: #222; color: #ffd700; }
-    .linha-subtotal { background: #2a2a2a; }
-    #toast-notification { position: fixed; bottom: 20px; right: 20px; background: #4caf50; color: white; padding: 10px 20px; border-radius: 4px; display: none; z-index: 1000; }
-    #toast-notification.show { display: block; }
+    label { 
+      display: block; 
+      margin-bottom: 6px; 
+      font-weight: 600; 
+      font-size: 11px; 
+      color: #c5a059; 
+      text-transform: uppercase; 
+      letter-spacing: 0.5px;
+    }
+    input, select, textarea { 
+      width: 100%; 
+      padding: 10px 12px; 
+      background: #1f1f1f; 
+      border: 1px solid #3a321d; 
+      color: #fff; 
+      border-radius: 4px; 
+      font-size: 13px; 
+      font-family: 'Montserrat', sans-serif;
+    }
+    input:focus, select:focus, textarea:focus { 
+      border-color: #D4AF37; 
+      outline: none; 
+      box-shadow: 0 0 5px rgba(212, 175, 55, 0.5);
+    }
+
+    /* Botões Dourados */
+    .btn { 
+      background: linear-gradient(135deg, #D4AF37, #AA7C11); 
+      color: #0b0b0b; 
+      border: none; 
+      padding: 12px; 
+      border-radius: 4px; 
+      cursor: pointer; 
+      width: 100%; 
+      font-size: 14px; 
+      font-weight: bold; 
+      text-transform: uppercase; 
+      letter-spacing: 1px;
+      transition: all 0.2s ease;
+    }
+    .btn:hover { 
+      background: linear-gradient(135deg, #FFD700, #D4AF37); 
+      box-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
+    }
+    .btn-secondary { background: #1a1a1a; color: #D4AF37; border: 1px solid #D4AF37; }
+    .btn-secondary:hover { background: #282828; }
+    .btn-sm { 
+      padding: 6px 10px; 
+      font-size: 11px; 
+      border-radius: 3px; 
+      border: none; 
+      cursor: pointer; 
+      color: #fff; 
+      font-weight: bold; 
+      text-decoration: none; 
+      display: inline-block; 
+    }
+    
+    .btn-green { background-color: #25D366; color: #000; }
+    .btn-warning { background-color: #f39c12; color: #000; }
+    .btn-purple { background-color: #8e44ad; }
+    .btn-dark { background-color: #333; }
+    .btn-info { background-color: #16a085; }
+
+    /* Linhas Dinâmicas de Produtos */
+    .item-linha { 
+      display: flex; 
+      gap: 8px; 
+      margin-bottom: 10px; 
+      align-items: center; 
+      background: #1a1a1a; 
+      padding: 10px; 
+      border-radius: 6px; 
+      border-left: 3px solid #D4AF37; 
+      flex-wrap: wrap; 
+    }
+    .item-linha select, .item-linha input { font-size: 12px; }
+    .col-tipo { flex: 1.5; min-width: 110px; }
+    .col-frag { flex: 2; min-width: 140px; }
+    .col-vol { flex: 1; min-width: 80px; }
+    .col-qtd { flex: 0.8; min-width: 60px; }
+    .col-preco { flex: 1; min-width: 80px; }
+    .col-status-ent { flex: 1.2; min-width: 110px; }
+    .col-status-pag { flex: 1.2; min-width: 110px; }
+    .btn-remove { background: #962d2d; color: #fff; border: none; border-radius: 4px; padding: 8px 12px; cursor: pointer; font-weight: bold; }
+
+    /* Filtros e Tabelas */
+    .filtros-bar { 
+      display: flex; 
+      gap: 15px; 
+      flex-wrap: wrap; 
+      background: #181818; 
+      border: 1px solid #2a2211; 
+      padding: 12px; 
+      border-radius: 6px; 
+      margin-bottom: 15px; 
+      align-items: flex-end; 
+    }
+    .filtros-bar > div { flex: 1; min-width: 180px; }
+    .botoes-status { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
+    th, td { border: 1px solid #2a2a2a; padding: 10px 8px; text-align: left; }
+    th { background-color: #1f1a0e; color: #D4AF37; font-family: 'Cinzel', serif; letter-spacing: 0.5px; }
+    tr:nth-child(even) { background-color: #121212; }
+    tr.linha-subtotal { background-color: #26200f; font-weight: bold; color: #FFD700; border: 1px solid #D4AF37; }
+
+    .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #222; }
+    .responsive-table { overflow-x: auto; }
+
+    /* Notificação Toast Flutuante */
+    #toast-notification {
+      visibility: hidden;
+      min-width: 280px;
+      background-color: #2e7d32;
+      color: #fff;
+      text-align: center;
+      border-radius: 8px;
+      padding: 14px 20px;
+      position: fixed;
+      z-index: 9999;
+      left: 50%;
+      top: 30px;
+      transform: translateX(-50%);
+      font-size: 15px;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+      opacity: 0;
+    }
+
+    #toast-notification.show {
+      visibility: visible;
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
 
-  <div id="toast-notification"></div>
+  <div id="toast-notification">Venda salva com sucesso!</div>
 
-  <!-- TELA DE LOGIN -->
-  <div id="loginScreen" class="container" style="max-width: 400px; margin-top: 100px;">
-    <h2>🔑 ACESSO AO SISTEMA</h2>
-    <div class="form-group">
-      <label>USUÁRIO</label>
-      <input type="text" id="loginUsuario" placeholder="Digite seu usuário">
-    </div>
-    <div class="form-group">
-      <label>SENHA</label>
-      <input type="password" id="loginSenha" placeholder="Digite sua senha">
-    </div>
-    <button onclick="fazerLogin()">ENTRAR NO SISTEMA</button>
-  </div>
+  <div class="container">
 
-  <!-- TELA PRINCIPAL -->
-  <div id="appScreen" class="container" style="display: none;">
-    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #444; padding-bottom: 10px; margin-bottom: 20px;">
-      <h2 id="labelUsuarioLogado" style="margin: 0;">👤 VENDEDOR</h2>
-      <button onclick="location.reload()" style="width: auto; background: #d32f2f; color: white;">Sair</button>
+    <!-- CABEÇALHO DA MARCA COM A LOGO DO GITHUB -->
+    <div class="brand-header">
+      <img src="https://raw.githubusercontent.com/samuraperfumes-hue/samura-perfumes/main/logo.png" alt="Samura Perfumes" class="brand-logo" id="imgLogo">
     </div>
 
-    <h3>📝 NOVA VENDA</h3>
-    <div class="form-group">
-      <label>CLIENTE</label>
-      <input type="text" id="clienteNome" placeholder="Nome do cliente" list="listaClientesCadastro" oninput="buscarTelefoneClienteAutomatico()">
-      <datalist id="listaClientesCadastro"></datalist>
-    </div>
-    <div class="form-group">
-      <label>TELEFONE / WHATSAPP</label>
-      <input type="text" id="clienteTelefone" placeholder="Telefone do cliente">
-    </div>
-    <div class="form-group">
-      <label>FORMA DE PAGAMENTO</label>
-      <select id="formaPagamento">
-        <option value="PIX">PIX</option>
-        <option value="DINHEIRO">DINHEIRO</option>
-        <option value="CARTÃO">CARTÃO</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>DATA DE AGENDAMENTO (Opcional)</label>
-      <input type="date" id="dataAgendamento">
+    <!-- TELA DE LOGIN -->
+    <div id="loginScreen" class="card" style="max-width: 380px; margin: 0 auto;">
+      <h2>🔑 Acesso ao Sistema</h2>
+      <div class="form-group">
+        <label>Usuário</label>
+        <input type="text" id="loginUsuario" placeholder="Digite seu usuário">
+      </div>
+      <div class="form-group">
+        <label>Senha</label>
+        <input type="password" id="loginSenha" placeholder="Digite sua senha">
+      </div>
+      <button class="btn" onclick="fazerLogin()">Entrar no Sistema</button>
     </div>
 
-    <h4>Itens da Venda</h4>
-    <div id="containerItens"></div>
-    <button type="button" onclick="adicionarLinhaProduto()" style="background: #333; color: #ffd700; margin-bottom: 15px;">+ Adicionar Outro Produto</button>
+    <!-- APLICAÇÃO -->
+    <div id="appScreen" style="display: none;">
+      <div class="header-bar">
+        <span id="labelUsuarioLogado" style="font-weight: bold; color: #D4AF37;"></span>
+        <button class="btn-sm btn-dark" onclick="location.reload()">Sair / Trocar Usuário</button>
+      </div>
 
-    <div class="form-group">
-      <label>DESCONTO (R$)</label>
-      <input type="number" id="descontoTotal" value="0" step="0.01" oninput="calcularTotais()">
-    </div>
-    
-    <div style="font-size: 18px; margin-bottom: 15px; color: #ffd700;">
-      <b>TOTAL FINAL: R$ <span id="labelTotalFinal">0,00</span></b>
+      <div id="btnNovoVend" style="display:none; margin-bottom: 15px;">
+        <button class="btn btn-secondary" onclick="cadastrarNovoVendedor()">➕ Cadastrar Novo Vendedor</button>
+      </div>
+
+      <!-- LANÇAMENTO DE VENDA -->
+      <div class="card">
+        <h2>🛒 Novo Lançamento de Venda</h2>
+        <input type="hidden" id="vendedorLogado">
+
+        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+          <div class="form-group" style="flex: 2; min-width: 200px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <label style="margin-bottom: 0;">Nome do Cliente</label>
+              <button type="button" class="btn-sm btn-secondary" onclick="cadastrarNovoCliente()" style="padding: 2px 6px; font-size: 10px;">➕ Novo Cliente</button>
+            </div>
+            <input type="text" id="clienteNome" placeholder="Digite o nome do cliente..." list="listaClientesCadastro" oninput="buscarTelefoneClienteAutomatico()">
+            <datalist id="listaClientesCadastro"></datalist>
+          </div>
+          <div class="form-group" style="flex: 1; min-width: 150px;">
+            <label>Telefone do Cliente</label>
+            <input type="text" id="clienteTelefone" placeholder="Auto-preenchido" readonly style="background: #181818; color: #D4AF37; font-weight: bold;">
+          </div>
+          <div class="form-group" style="flex: 1; min-width: 150px;">
+            <label>Data de Agendamento</label>
+            <input type="date" id="dataAgendamento">
+          </div>
+          <div class="form-group" style="flex: 1; min-width: 150px;">
+            <label>Forma de Pagamento</label>
+            <select id="formaPagamento">
+              <option value="PIX">PIX</option>
+              <option value="Cartão de Crédito">Cartão de Crédito</option>
+              <option value="Cartão de Débito">Cartão de Débito</option>
+              <option value="Dinheiro">Dinheiro</option>
+              <option value="Outro">Outro</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Informações do Agendamento / Observações</label>
+          <textarea id="infoAgendamento" placeholder="Ex: Entregar no período da tarde / Confirmar antes de enviar"></textarea>
+        </div>
+
+        <h3>Produtos da Venda</h3>
+        <div id="containerItens"></div>
+        <button type="button" class="btn-sm btn-secondary" onclick="adicionarLinhaProduto()" style="margin-bottom: 15px;">+ Adicionar Produto</button>
+
+        <div class="form-group" style="max-width: 200px;">
+          <label>Desconto Total (R$)</label>
+          <input type="number" id="descontoTotal" value="0" oninput="calcularTotais()">
+        </div>
+
+        <div style="font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #FFD700;">
+          Total Final: R$ <span id="labelTotalFinal">0,00</span>
+        </div>
+
+        <button class="btn" onclick="salvarVenda()">Finalizar e Salvar Venda</button>
+      </div>
+
+      <!-- PAINEL DE CONTROLE DE VENDAS -->
+      <div class="card">
+        <h2>📦 Controle e Histórico de Vendas</h2>
+
+        <div class="filtros-bar">
+          <div id="boxFiltroVendedor" style="display: none;">
+            <label>Vendedor (Digite para Filtrar):</label>
+            <input type="text" id="inputFiltroVendedor" placeholder="Nome do vendedor..." oninput="aplicarFiltros()" list="listaVendedores">
+            <datalist id="listaVendedores"></datalist>
+          </div>
+
+          <div>
+            <label>Cliente (Digite para Filtrar):</label>
+            <input type="text" id="inputFiltroCliente" placeholder="Nome do cliente..." oninput="aplicarFiltros()" list="listaClientes">
+            <datalist id="listaClientes"></datalist>
+          </div>
+
+          <div>
+            <label>Mês:</label>
+            <select id="selectFiltroMes" onchange="aplicarFiltros()">
+              <option value="TODOS">Todos os Meses</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="botoes-status">
+          <button class="btn-sm btn-dark" onclick="setFiltroStatus('TODOS')">Todas</button>
+          <button class="btn-sm btn-warning" onclick="setFiltroStatus('PENDENTES_PAG')">Pagamentos Pendentes</button>
+          <button class="btn-sm btn-purple" onclick="setFiltroStatus('PENDENTES_ENT')">Entregas Pendentes</button>
+          <button class="btn-sm btn-green" onclick="setFiltroStatus('PAGOS')">Somente Pagos</button>
+          <button class="btn-sm btn-info" onclick="carregarPainelControle()">🔄 Atualizar Base</button>
+        </div>
+
+        <div class="responsive-table">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Vendedor</th>
+                <th>Cliente</th>
+                <th>Total</th>
+                <th>Agendamento</th>
+                <th>Pagamento</th>
+                <th>Entrega Geral</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tabelaControle">
+              <tr><td colspan="8" style="text-align:center;">Carregando registros...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
     </div>
 
-    <button onclick="salvarVenda()" style="background: #4caf50; color: white; font-size: 16px;">FINALIZAR E SALVAR VENDA</button>
-
-    <h3 style="margin-top: 40px;">📊 PAINEL DE CONTROLE E VENDAS</h3>
-    <div style="overflow-x: auto;">
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Vendedor</th>
-            <th>Cliente</th>
-            <th>Valor</th>
-            <th>Agendamento</th>
-            <th>Pagamento</th>
-            <th>Entrega</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody id="tabelaControle">
-          <tr><td colspan="8" style="text-align:center;">Carregando painel...</td></tr>
-        </tbody>
-      </table>
-    </div>
   </div>
 
   <script>
+    // URL da API gerada no Google Apps Script
     const API_URL = "https://script.google.com/macros/s/AKfycbw9PqZASwgNfrMv-hXqssFG9vylTgxbqR7_dhBoNkiIhEFs64C8A8atE2aeso5z2Ejh/exec";
-    const NOME_ADMINISTRADOR = "RODRIGO";
 
-    let catalogoGlobal = [];
-    let mapaClientesGlobal = {};
-    let usuarioLogado = "";
-    let cacheVendas = [];
-
+    // Função centralizada e blindada para comunicação com o backend
     async function chamarAPI(acao, dados = {}) {
       try {
         const resposta = await fetch(API_URL, {
           method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          redirect: 'follow',
           body: JSON.stringify({ acao: acao, ...dados })
         });
         const texto = await resposta.text();
         return JSON.parse(texto);
       } catch (erro) {
-        return { sucesso: false, erro: "Falha na conexão." };
+        console.error("Erro na comunicação com a API:", erro);
+        return { sucesso: false, erro: "Falha na conexão com o servidor." };
       }
     }
 
@@ -133,56 +368,92 @@
       var toast = document.getElementById("toast-notification");
       toast.innerText = mensagem;
       toast.className = "show";
-      setTimeout(function() { toast.className = ""; }, 2500);
+      
+      setTimeout(function() { 
+        toast.className = toast.className.replace("show", ""); 
+      }, 2500);
     }
+
+    const NOME_ADMINISTRADOR = "RODRIGO";
+
+    let catalogoGlobal = [];
+    let mapaClientesGlobal = {};
+    let usuarioLogado = "";
+    let cacheVendas = [];
+    let filtroStatusAtual = 'TODOS';
 
     async function fazerLogin() {
       const u = document.getElementById('loginUsuario').value;
       const s = document.getElementById('loginSenha').value;
-      if (!u || !s) return alert("Preencha usuário e senha.");
+
+      if (!u || !s) return alert("Por favor, preencha usuário e senha.");
 
       const res = await chamarAPI("autenticarUsuario", { usuario: u, senha: s });
-      if (!res || !res.sucesso) return alert("Erro no login.");
+
+      if (!res.sucesso) return alert("Erro: " + res.erro);
 
       usuarioLogado = res.usuario;
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('appScreen').style.display = 'block';
+      document.getElementById('vendedorLogado').value = usuarioLogado;
       document.getElementById('labelUsuarioLogado').innerText = "👤 VENDEDOR: " + usuarioLogado.toUpperCase();
 
-      await buscarDadosIniciais();
-      document.getElementById('containerItens').innerHTML = '';
+      const eAdmin = usuarioLogado.toUpperCase().trim() === NOME_ADMINISTRADOR.toUpperCase().trim();
+      document.getElementById('btnNovoVend').style.display = eAdmin ? 'block' : 'none';
+      document.getElementById('boxFiltroVendedor').style.display = eAdmin ? 'block' : 'none';
+
       adicionarLinhaProduto();
       carregarPainelControle();
     }
 
-    async function buscarDadosIniciais() {
+    window.onload = async function() {
       const res = await chamarAPI("buscarDadosIniciais");
-      if (res && res.sucesso) {
-        catalogoGlobal = res.catalogo || res.dadosCatalogo || [];
+      if (res.sucesso) {
+        catalogoGlobal = res.catalogo || [];
         mapaClientesGlobal = res.clientes || {};
         preencherDatalistClientesCadastro();
       }
-    }
+    };
 
     function preencherDatalistClientesCadastro() {
       const datalist = document.getElementById('listaClientesCadastro');
       if (!datalist) return;
       datalist.innerHTML = '';
+      
       Object.keys(mapaClientesGlobal).forEach(nome => {
-        const opt = document.createElement('option');
-        opt.value = nome;
-        datalist.appendChild(opt);
+        datalist.innerHTML += `<option value="${nome}">`;
       });
     }
 
     function buscarTelefoneClienteAutomatico() {
       const nomeInput = document.getElementById('clienteNome').value.trim().toUpperCase();
       const campoTelefone = document.getElementById('clienteTelefone');
+
       if (mapaClientesGlobal[nomeInput]) {
         const info = mapaClientesGlobal[nomeInput];
-        campoTelefone.value = typeof info === 'object' ? (info.telefone || '') : info;
+        campoTelefone.value = typeof info === 'object' ? (info.telefone || info.fone || '') : info;
       } else {
         campoTelefone.value = '';
+      }
+    }
+
+    async function cadastrarNovoCliente() {
+      const nome = prompt("Nome do cliente:");
+      if (!nome) return;
+      const telefone = prompt("Telefone / WhatsApp (apenas números):") || "";
+      const obs = prompt("Observações (opcional):") || "";
+
+      const dados = { nome: nome.trim(), telefone: telefone, endereco: obs };
+
+      const res = await chamarAPI("cadastrarCliente", { dadosCliente: dados });
+      if (res.sucesso || res) {
+        alert("Cliente cadastrado com sucesso!");
+        const nomeUpper = dados.nome.toUpperCase();
+        document.getElementById('clienteNome').value = nomeUpper;
+        document.getElementById('clienteTelefone').value = dados.telefone;
+        
+        mapaClientesGlobal[nomeUpper] = { telefone: dados.telefone };
+        preencherDatalistClientesCadastro();
       }
     }
 
@@ -190,142 +461,336 @@
       const container = document.getElementById('containerItens');
       const div = document.createElement('div');
       div.className = 'item-linha';
-      div.style.display = 'flex';
-      div.style.gap = '5px';
-      div.style.marginBottom = '10px';
-      div.innerHTML = `
-        <div style="flex:2;"><select class="sel-tipo" onchange="atualizarOpcoesFragrancia(this); calcularTotais();"><option value="">Tipo...</option></select></div>
-        <div style="flex:2;"><select class="sel-frag" onchange="atualizarOpcoesVolumetria(this); calcularTotais();"><option value="">Fragrância...</option></select></div>
-        <div style="flex:1;"><select class="sel-vol" onchange="atualizarPrecoEVolumetria(this); calcularTotais();"><option value="">Vol.</option></select></div>
-        <div style="flex:1;"><input type="number" value="1" min="1" oninput="calcularTotais()" class="qtd"></div>
-        <div style="flex:1;"><input type="number" placeholder="Unit" step="0.01" oninput="calcularTotais()" class="preco"></div>
-        <button type="button" onclick="removerLinha(this)" style="width: 40px; background: #d32f2f; color: white;">X</button>
-      `;
-      container.appendChild(div);
-      atualizarOpcoesTipo(div.querySelector('.sel-tipo'));
-    }
 
-    function atualizarOpcoesTipo(selectTipo) {
-      if (!catalogoGlobal.length) return;
-      const tiposUnicos = [...new Set(catalogoGlobal.map(item => item.tipo || item.Tipo || item[0]).filter(Boolean))];
-      selectTipo.innerHTML = '<option value="">Tipo...</option>';
-      tiposUnicos.forEach(t => selectTipo.innerHTML += `<option value="${t}">${t}</option>`);
-      if (tiposUnicos.length) selectTipo.value = tiposUnicos[0];
-      atualizarOpcoesFragrancia(selectTipo);
+      const tipos = [...new Set(catalogoGlobal.map(c => c.tipo))];
+      let optTipos = tipos.map(t => `<option value="${t}" ${t === 'Perfume' ? 'selected' : ''}>${t}</option>`).join('');
+
+      div.innerHTML = `
+        <div class="col-tipo">
+          <select class="sel-tipo" onchange="atualizarOpcoesFragrancia(this); calcularTotais();">
+            ${optTipos}
+          </select>
+        </div>
+        <div class="col-frag">
+          <select class="sel-frag" onchange="atualizarOpcoesVolumetria(this); calcularTotais();">
+            <option value="">Selecione Fragrância...</option>
+          </select>
+        </div>
+        <div class="col-vol">
+          <select class="sel-vol" onchange="atualizarPrecoEVolumetria(this); calcularTotais();">
+            <option value="">Volum.</option>
+          </select>
+        </div>
+        <div class="col-qtd">
+          <input type="number" value="1" min="1" placeholder="Qtd" oninput="calcularTotais()" class="qtd">
+        </div>
+        <div class="col-preco">
+          <input type="number" placeholder="Unit (R$)" step="0.01" oninput="calcularTotais()" class="preco">
+        </div>
+        <div class="col-status-ent">
+          <label style="font-size: 9px; margin-bottom: 2px;">Entrega</label>
+          <select class="sel-status-item">
+            <option value="Pendente" selected>Não Entregue</option>
+            <option value="Entregue">Entregue</option>
+          </select>
+        </div>
+        <div class="col-status-pag">
+          <label style="font-size: 9px; margin-bottom: 2px;">Pagamento</label>
+          <select class="sel-status-pag-item">
+            <option value="Pendente" selected>Pendente</option>
+            <option value="Pago">Pago</option>
+            <option value="Agendado">Agendado</option>
+          </select>
+        </div>
+        <button type="button" class="btn-remove" onclick="removerLinha(this)">X</button>
+      `;
+
+      container.appendChild(div);
+      atualizarOpcoesFragrancia(div.querySelector('.sel-tipo'));
     }
 
     function atualizarOpcoesFragrancia(selectTipo) {
-      const linha = selectTipo.closest('div').parentNode;
+      const linha = selectTipo.parentElement.parentElement;
       const tipoSel = selectTipo.value;
       const selectFrag = linha.querySelector('.sel-frag');
-      const filtrados = catalogoGlobal.filter(item => String(item.tipo || item[0]).trim() === String(tipoSel).trim());
-      const frags = [...new Set(filtrados.map(item => item.fragrancia || item[1]).filter(Boolean))];
-      selectFrag.innerHTML = '<option value="">Fragrância...</option>';
-      frags.forEach(f => selectFrag.innerHTML += `<option value="${f}">${f}</option>`);
+
+      const fragrancias = [...new Set(catalogoGlobal.filter(c => c.tipo === tipoSel).map(c => c.fragrancia))];
+      selectFrag.innerHTML = '<option value="">Selecione Fragrância...</option>' + 
+        fragrancias.map(f => `<option value="${f}">${f}</option>`).join('');
+
       atualizarOpcoesVolumetria(selectFrag);
     }
 
     function atualizarOpcoesVolumetria(selectFrag) {
-      const linha = selectFrag.closest('div').parentNode;
+      const linha = selectFrag.parentElement.parentElement;
       const tipoSel = linha.querySelector('.sel-tipo').value;
       const fragSel = selectFrag.value;
       const selectVol = linha.querySelector('.sel-vol');
-      const opcoes = catalogoGlobal.filter(item => String(item.tipo || item[0]) === tipoSel && String(item.fragrancia || item[1]) === fragSel);
-      selectVol.innerHTML = opcoes.map(o => `<option value="${o.volumetria || o[2]}" data-preco="${o.preco || o[3]}">${o.volumetria || o[2]}</option>`).join('');
+
+      if (!fragSel) {
+        selectVol.innerHTML = '<option value="">Volum.</option>';
+        linha.querySelector('.preco').value = '';
+        return;
+      }
+
+      const opcoes = catalogoGlobal.filter(c => c.tipo === tipoSel && c.fragrancia === fragSel);
+      selectVol.innerHTML = opcoes.map(o => `<option value="${o.volumetria}" data-preco="${o.preco}" ${o.volumetria === '50 ml' ? 'selected' : ''}>${o.volumetria}</option>`).join('');
+
       atualizarPrecoEVolumetria(selectVol);
     }
 
     function atualizarPrecoEVolumetria(selectVol) {
-      const linha = selectVol.closest('div').parentNode;
+      const linha = selectVol.parentElement.parentElement;
       const opt = selectVol.options[selectVol.selectedIndex];
-      if (opt) linha.querySelector('.preco').value = parseFloat(opt.getAttribute('data-preco') || 0).toFixed(2);
+      if (opt) {
+        const preco = opt.getAttribute('data-preco') || 0;
+        linha.querySelector('.preco').value = parseFloat(preco).toFixed(2);
+      }
     }
 
     function removerLinha(btn) {
-      btn.closest('div').parentNode.remove();
+      btn.parentElement.remove();
       calcularTotais();
     }
 
     function calcularTotais() {
       let subtotal = 0;
-      document.querySelectorAll('.item-linha').forEach(l => {
-        subtotal += (parseFloat(l.querySelector('.qtd').value) || 0) * (parseFloat(l.querySelector('.preco').value) || 0);
+      const linhas = document.querySelectorAll('.item-linha');
+      linhas.forEach(l => {
+        const qtd = parseFloat(l.querySelector('.qtd').value) || 0;
+        const preco = parseFloat(l.querySelector('.preco').value) || 0;
+        subtotal += (qtd * preco);
       });
+
       const desconto = parseFloat(document.getElementById('descontoTotal').value) || 0;
-      document.getElementById('labelTotalFinal').innerText = Math.max(0, subtotal - desconto).toFixed(2).replace('.', ',');
+      const totalFinal = Math.max(0, subtotal - desconto);
+      document.getElementById('labelTotalFinal').innerText = totalFinal.toFixed(2).replace('.', ',');
+    }
+
+    async function cadastrarNovoVendedor() {
+      const user = prompt("Nome do novo Vendedor:");
+      if(!user) return;
+      const pass = prompt("Senha para o novo Vendedor:");
+      if(!pass) return;
+
+      const res = await chamarAPI("cadastrarVendedor", { novoUsuario: user, novaSenha: pass });
+      if(res.sucesso || res) {
+        alert("Vendedor cadastrado com sucesso!");
+      }
     }
 
     async function salvarVenda() {
       const cliente = document.getElementById('clienteNome').value.trim();
-      if(!cliente) return alert("Preencha o cliente.");
+      if(!cliente) return alert("Preencha o nome do cliente.");
+
       const itens = [];
       let subtotal = 0;
-      document.querySelectorAll('.item-linha').forEach(l => {
+      const linhas = document.querySelectorAll('.item-linha');
+
+      linhas.forEach(l => {
+        const tipo = l.querySelector('.sel-tipo').value;
+        const frag = l.querySelector('.sel-frag').value;
+        const vol = l.querySelector('.sel-vol').value;
         const qtd = parseFloat(l.querySelector('.qtd').value) || 0;
         const unit = parseFloat(l.querySelector('.preco').value) || 0;
-        if(l.querySelector('.sel-frag').value && qtd > 0) {
+        const stItem = l.querySelector('.sel-status-item').value;
+        const stPagItem = l.querySelector('.sel-status-pag-item').value;
+
+        if(frag && qtd > 0) {
           itens.push({
-            tipo: l.querySelector('.sel-tipo').value,
-            fragrancia: l.querySelector('.sel-frag').value,
-            volumetria: l.querySelector('.sel-vol').value,
+            tipo: tipo,
+            fragrancia: frag,
+            volumetria: vol,
             qtd: qtd,
-            unitario: unit
+            unitario: unit,
+            statusItem: stItem,
+            statusPagamentoItem: stPagItem
           });
           subtotal += (qtd * unit);
         }
       });
-      if(!itens.length) return alert("Adicione itens válidos.");
+
+      if(itens.length === 0) return alert("Selecione pelo menos uma fragrância válida.");
+
       const desconto = parseFloat(document.getElementById('descontoTotal').value) || 0;
-      const res = await chamarAPI("registrarVenda", { dadosVenda: {
-        vendedor: usuarioLogado, cliente: cliente,
+
+      const dadosVenda = {
+        vendedor: usuarioLogado,
+        cliente: cliente,
         dataAgendamento: document.getElementById('dataAgendamento').value,
         formaPagamento: document.getElementById('formaPagamento').value,
-        desconto: desconto, totalBruto: subtotal, totalLiquido: Math.max(0, subtotal - desconto), itens: itens
-      }});
-      if (res && res.sucesso) {
-        exibirToast("✓ Venda salva!");
+        infoAgendamento: document.getElementById('infoAgendamento').value,
+        desconto: desconto,
+        totalBruto: subtotal,
+        totalLiquido: Math.max(0, subtotal - desconto),
+        itens: itens
+      };
+
+      const res = await chamarAPI("registrarVenda", { dadosVenda: dadosVenda });
+      if(res) {
+        exibirToast("✓ Venda " + (res.id || "") + " salva com sucesso!");
         document.getElementById('clienteNome').value = '';
+        document.getElementById('clienteTelefone').value = '';
+        document.getElementById('dataAgendamento').value = '';
+        document.getElementById('formaPagamento').value = 'PIX';
+        document.getElementById('infoAgendamento').value = '';
         document.getElementById('containerItens').innerHTML = '';
+        document.getElementById('descontoTotal').value = '0';
         adicionarLinhaProduto();
+        calcularTotais();
         carregarPainelControle();
-      } else { alert("Erro ao salvar."); }
+      }
     }
 
     async function carregarPainelControle() {
       const res = await chamarAPI("buscarPainelControle");
-      if (res && res.sucesso) {
-        cacheVendas = res.dados || [];
-        renderizarTabelaControle(cacheVendas);
+      cacheVendas = res.dados || res || [];
+      preencherFiltroVendedores();
+      preencherFiltroClientes();
+      preencherFiltroMeses();
+      aplicarFiltros();
+    }
+
+    function preencherFiltroVendedores() {
+      const datalist = document.getElementById('listaVendedores');
+      if (!datalist) return;
+      const vendedores = [...new Set(cacheVendas.map(v => v.vendedor).filter(Boolean))];
+      
+      datalist.innerHTML = '';
+      vendedores.forEach(v => {
+        datalist.innerHTML += `<option value="${v}">`;
+      });
+    }
+
+    function preencherFiltroClientes() {
+      const datalist = document.getElementById('listaClientes');
+      if (!datalist) return;
+      const clientes = [...new Set(cacheVendas.map(v => v.cliente).filter(Boolean))];
+      
+      datalist.innerHTML = '';
+      clientes.forEach(c => {
+        datalist.innerHTML += `<option value="${c}">`;
+      });
+    }
+
+    function preencherFiltroMeses() {
+      const select = document.getElementById('selectFiltroMes');
+      const mesesSet = new Set();
+
+      cacheVendas.forEach(v => {
+        if(v.data) {
+          let p = v.data.split('/');
+          if(p.length === 3) mesesSet.add(`${p[1]}/${p[2]}`);
+        }
+      });
+
+      select.innerHTML = '<option value="TODOS">Todos os Meses</option>';
+      Array.from(mesesSet).sort().reverse().forEach(m => {
+        select.innerHTML += `<option value="${m}">${m}</option>`;
+      });
+    }
+
+    function setFiltroStatus(tipo) {
+      filtroStatusAtual = tipo;
+      aplicarFiltros();
+    }
+
+    function aplicarFiltros() {
+      if (!cacheVendas) return;
+
+      const eAdmin = usuarioLogado.toUpperCase().trim() === NOME_ADMINISTRADOR.toUpperCase().trim();
+      let filtradas = eAdmin ? cacheVendas : cacheVendas.filter(v => v.vendedor.toUpperCase().trim() === usuarioLogado.toUpperCase().trim());
+
+      const inputVend = document.getElementById('inputFiltroVendedor');
+      const vendBusca = inputVend ? inputVend.value.trim().toUpperCase() : '';
+      if (eAdmin && vendBusca !== '') {
+        filtradas = filtradas.filter(v => v.vendedor && v.vendedor.toUpperCase().includes(vendBusca));
       }
+
+      const inputCli = document.getElementById('inputFiltroCliente');
+      const cliBusca = inputCli ? inputCli.value.trim().toUpperCase() : '';
+      if (cliBusca !== '') {
+        filtradas = filtradas.filter(v => v.cliente && v.cliente.toUpperCase().includes(cliBusca));
+      }
+
+      const mesSel = document.getElementById('selectFiltroMes').value;
+      if (mesSel !== 'TODOS') {
+        filtradas = filtradas.filter(v => v.data && v.data.includes(`/${mesSel}`));
+      }
+
+      if (filtroStatusAtual === 'PENDENTES_PAG') {
+        filtradas = filtradas.filter(v => String(v.statusPagamento).toLowerCase() !== 'pago');
+      } else if (filtroStatusAtual === 'PENDENTES_ENT') {
+        filtradas = filtradas.filter(v => String(v.statusEntrega).toLowerCase() !== 'entregue');
+      } else if (filtroStatusAtual === 'PAGOS') {
+        filtradas = filtradas.filter(v => String(v.statusPagamento).toLowerCase() === 'pago');
+      }
+
+      renderizarTabelaControle(filtradas);
     }
 
     function renderizarTabelaControle(vendasExibidas) {
       const tbody = document.getElementById('tabelaControle');
-      if (!vendasExibidas.length) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Nenhuma venda.</td></tr>';
+
+      if (!vendasExibidas || vendasExibidas.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Nenhuma venda encontrada.</td></tr>';
         return;
       }
-      const total = vendasExibidas.reduce((acc, v) => acc + (parseFloat(v.totalLiquido || v.valorLiquido) || 0), 0);
-      let html = `<tr class="linha-subtotal"><td colspan="3"><b>SUBTOTAL:</b></td><td><b>R$ ${total.toFixed(2).replace('.', ',')}</b></td><td colspan="4">Comissão: R$ ${(total*0.2).toFixed(2).replace('.', ',')}</td></tr>`;
-      html += vendasExibidas.map(v => `
-        <tr>
-          <td><b>${v.id}</b></td>
-          <td>${v.vendedor || '-'}</td>
-          <td>${v.cliente || '-'}</td>
-          <td>R$ ${(parseFloat(v.totalLiquido || v.valorLiquido) || 0).toFixed(2).replace('.', ',')}</td>
-          <td>${v.dataAgendamento || '-'}</td>
-          <td><select onchange="mudarStatus(${v.linha}, 'pagamento', this.value)"><option value="Pago" ${v.statusPagamento=='Pago'?'selected':''}>Pago</option><option value="Pendente" ${v.statusPagamento=='Pendente'?'selected':''}>Pendente</option></select></td>
-          <td><select onchange="mudarStatus(${v.linha}, 'entrega', this.value)"><option value="Entregue" ${v.statusEntrega=='Entregue'?'selected':''}>Entregue</option><option value="Pendente" ${v.statusEntrega=='Pendente'?'selected':''}>Pendente</option></select></td>
-          <td>-</td>
+
+      const totalSubtotal = vendasExibidas.reduce((acc, v) => acc + (parseFloat(v.totalLiquido) || 0), 0);
+      const totalComissao = totalSubtotal * 0.20;
+
+      let html = `
+        <tr class="linha-subtotal">
+          <td colspan="3"><b>SUBTOTAL DA SELEÇÃO:</b></td>
+          <td><b>R$ ${totalSubtotal.toFixed(2).replace('.', ',')}</b></td>
+          <td colspan="4">
+            Comissão (20%): <b>R$ ${totalComissao.toFixed(2).replace('.', ',')}</b> | 
+            Registros: <b>${vendasExibidas.length}</b>
+          </td>
         </tr>
-      `).join('');
+      `;
+
+      html += vendasExibidas.map(v => {
+        const msgWa = encodeURIComponent(`Olá ${v.cliente}, lembrete da venda ${v.id}. Total: R$ ${Number(v.totalLiquido).toFixed(2)}.`);
+        const foneLimpo = (v.telefone || '').replace(/\D/g, '');
+        const btnWa = foneLimpo ? `<a class="btn-sm btn-green" href="https://wa.me/55${foneLimpo}?text=${msgWa}" target="_blank">Enviar PIX</a>` : 'Sem Tel';
+
+        const pag = String(v.statusPagamento).trim();
+        const ent = String(v.statusEntrega).trim();
+
+        return `
+          <tr>
+            <td><b>${v.id}</b></td>
+            <td>${v.vendedor}</td>
+            <td>${v.cliente}</td>
+            <td>R$ ${Number(v.totalLiquido).toFixed(2).replace('.', ',')}</td>
+            <td>${v.dataAgendamento || '-'}</td>
+            <td>
+              <select onchange="mudarStatus(${v.linha}, 'pagamento', this.value)">
+                <option value="Agendado" ${pag.toLowerCase()=='agendado'?'selected':''}>Agendado</option>
+                <option value="Pago" ${pag.toLowerCase()=='pago'?'selected':''}>Pago</option>
+                <option value="Pendente" ${pag.toLowerCase()=='pendente'?'selected':''}>Pendente</option>
+              </select>
+            </td>
+            <td>
+              <select onchange="mudarStatus(${v.linha}, 'entrega', this.value)">
+                <option value="Pendente" ${ent.toLowerCase()=='pendente'?'selected':''}>Pendente</option>
+                <option value="Entregue" ${ent.toLowerCase()=='entregue'?'selected':''}>Entregue</option>
+              </select>
+            </td>
+            <td>${btnWa}</td>
+          </tr>
+        `;
+      }).join('');
+
       tbody.innerHTML = html;
     }
 
     async function mudarStatus(linha, tipo, valor) {
       await chamarAPI("atualizarStatusVenda", { linha: linha, tipo: tipo, valor: valor });
-      exibirToast("Atualizado!");
     }
   </script>
+
 </body>
 </html>
