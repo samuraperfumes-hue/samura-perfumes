@@ -197,7 +197,7 @@
 </head>
 <body>
 
-  <div id="toast-notification">Venda salva com sucesso!</div>
+  <div id="toast-notification">Ação realizada com sucesso!</div>
 
   <div class="container">
 
@@ -239,7 +239,7 @@
         <div style="display: flex; gap: 15px; flex-wrap: wrap;">
           <div class="form-group" style="flex: 2; min-width: 200px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <label style="margin-bottom: 0;">Nome do Cliente</label>
+              <label style="margin-bottom: 0;">Nome do Cliente (Aba CLIENTES)</label>
               <button type="button" class="btn-sm btn-secondary" onclick="cadastrarNovoCliente()" style="padding: 2px 6px; font-size: 10px;">➕ Novo Cliente</button>
             </div>
             <input type="text" id="clienteNome" placeholder="Digite o nome do cliente..." list="listaClientesCadastro" oninput="buscarTelefoneClienteAutomatico()">
@@ -270,7 +270,7 @@
           <textarea id="infoAgendamento" placeholder="Ex: Entregar no período da tarde / Confirmar antes de enviar"></textarea>
         </div>
 
-        <h3>Produtos da Venda</h3>
+        <h3>Produtos da Venda (Aba PRODUTOS)</h3>
         <div id="containerItens"></div>
         <button type="button" class="btn-sm btn-secondary" onclick="adicionarLinhaProduto()" style="margin-bottom: 15px;">+ Adicionar Produto</button>
 
@@ -348,7 +348,7 @@
     // URL da API gerada no Google Apps Script
     const API_URL = "https://script.google.com/macros/s/AKfycbw9PqZASwgNfrMv-hXqssFG9vylTgxbqR7_dhBoNkiIhEFs64C8A8atE2aeso5z2Ejh/exec";
 
-    // Função centralizada e blindada para comunicação com a API
+    // Função centralizada para comunicação com a API
     async function chamarAPI(acao, dados = {}) {
       try {
         const resposta = await fetch(API_URL, {
@@ -463,7 +463,7 @@
       div.className = 'item-linha';
 
       const tipos = [...new Set(catalogoGlobal.map(c => c.tipo))];
-      // Garante que "Perfume" venha selecionado por padrão se existir
+      // Inicia com Perfume selecionado por padrão
       let optTipos = tipos.map(t => `<option value="${t}" ${t.toLowerCase() === 'perfume' ? 'selected' : ''}>${t}</option>`).join('');
 
       div.innerHTML = `
@@ -507,8 +507,6 @@
       `;
 
       container.appendChild(div);
-      
-      // Inicializa as opções com base no tipo selecionado por padrão (Perfume)
       atualizarOpcoesFragrancia(div.querySelector('.sel-tipo'));
     }
 
@@ -538,7 +536,7 @@
 
       const opcoes = catalogoGlobal.filter(c => c.tipo === tipoSel && c.fragrancia === fragSel);
       
-      // Sugere 50 ml por padrão caso exista nas opções
+      // Sugere 50 ml por padrão se disponível nas opções
       selectVol.innerHTML = opcoes.map(o => {
         const is50ml = String(o.volumetria).toLowerCase().includes('50');
         return `<option value="${o.volumetria}" data-preco="${o.preco}" ${is50ml ? 'selected' : ''}>${o.volumetria}</option>`;
@@ -795,8 +793,21 @@
       tbody.innerHTML = html;
     }
 
+    // Função corrigida para garantir a interação real e persistência com o Apps Script
     async function mudarStatus(linha, tipo, valor) {
-      await chamarAPI("atualizarStatusVenda", { linha: linha, tipo: tipo, valor: valor });
+      const res = await chamarAPI("atualizarStatusVenda", { linha: linha, tipo: tipo, valor: valor });
+      if (res && res.sucesso) {
+        exibirToast("✓ Status atualizado na planilha!");
+        // Atualiza o cache local correspondente para refletir a mudança sem perder o foco
+        const vendaEncontrada = cacheVendas.find(v => v.linha === linha);
+        if (vendaEncontrada) {
+          if (tipo === 'pagamento') vendaEncontrada.statusPagamento = valor;
+          if (tipo === 'entrega') vendaEncontrada.statusEntrega = valor;
+        }
+      } else {
+        alert("Erro ao atualizar status na planilha.");
+        carregarPainelControle(); // Recarrega se houver falha para sincronizar
+      }
     }
   </script>
 
