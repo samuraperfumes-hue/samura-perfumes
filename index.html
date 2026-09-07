@@ -4,7 +4,7 @@
   <base target="_top">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Tags para transformar em App (PWA) usando a logo do GitHub -->
+  <!-- Tags para transformar em App (PWA) com a logo do GitHub -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Samura Perfumes">
@@ -348,7 +348,7 @@
     // URL da API gerada no Google Apps Script
     const API_URL = "https://script.google.com/macros/s/AKfycbw9PqZASwgNfrMv-hXqssFG9vylTgxbqR7_dhBoNkiIhEFs64C8A8atE2aeso5z2Ejh/exec";
 
-    // Função centralizada e blindada para comunicação com o backend
+    // Função centralizada e blindada para comunicação com a API
     async function chamarAPI(acao, dados = {}) {
       try {
         const resposta = await fetch(API_URL, {
@@ -463,7 +463,8 @@
       div.className = 'item-linha';
 
       const tipos = [...new Set(catalogoGlobal.map(c => c.tipo))];
-      let optTipos = tipos.map(t => `<option value="${t}" ${t === 'Perfume' ? 'selected' : ''}>${t}</option>`).join('');
+      // Garante que "Perfume" venha selecionado por padrão se existir
+      let optTipos = tipos.map(t => `<option value="${t}" ${t.toLowerCase() === 'perfume' ? 'selected' : ''}>${t}</option>`).join('');
 
       div.innerHTML = `
         <div class="col-tipo">
@@ -506,6 +507,8 @@
       `;
 
       container.appendChild(div);
+      
+      // Inicializa as opções com base no tipo selecionado por padrão (Perfume)
       atualizarOpcoesFragrancia(div.querySelector('.sel-tipo'));
     }
 
@@ -534,7 +537,12 @@
       }
 
       const opcoes = catalogoGlobal.filter(c => c.tipo === tipoSel && c.fragrancia === fragSel);
-      selectVol.innerHTML = opcoes.map(o => `<option value="${o.volumetria}" data-preco="${o.preco}" ${o.volumetria === '50 ml' ? 'selected' : ''}>${o.volumetria}</option>`).join('');
+      
+      // Sugere 50 ml por padrão caso exista nas opções
+      selectVol.innerHTML = opcoes.map(o => {
+        const is50ml = String(o.volumetria).toLowerCase().includes('50');
+        return `<option value="${o.volumetria}" data-preco="${o.preco}" ${is50ml ? 'selected' : ''}>${o.volumetria}</option>`;
+      }).join('');
 
       atualizarPrecoEVolumetria(selectVol);
     }
