@@ -5,6 +5,18 @@ import { api, brl, dtBR, hojeISO } from '../util';
 const num = (v) => Number(String(v).replace(',', '.'));
 const fmtQ = (v, un) => Number(v).toLocaleString('pt-BR', { maximumFractionDigits: 3 }) + ' ' + un;
 const custoTxt = (v, un) => (v == null ? '-' : brl(v) + (un === 'ml' ? '/ml' : '/un'));
+const norm = (t) => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const tamanho = (desc) => { const m = [...String(desc).matchAll(/(\d+(?:[.,]\d+)?)\s*(ml|g)\b/gi)].pop(); return m ? Number(m[1].replace(',', '.')) : null; };
+const sugerir = (desc, insumos) => {
+  const alvo = new Set(norm(desc).split(/[^a-z0-9]+/).filter(Boolean));
+  let melhor = null; let pontos = 0;
+  insumos.forEach((i) => {
+    const tk = norm(i.nome).split(/[^a-z0-9]+/).filter((x) => x && x !== 'essencia');
+    if (!tk.length || !tk.every((x) => alvo.has(x))) return;
+    if (tk.length > pontos) { melhor = i; pontos = tk.length; }
+  });
+  return melhor ? String(melhor.id) : '';
+};
 const tag = (t) => (el, n) => { const x = el.getElementsByTagName(n)[0]; return x ? x.textContent : ''; };
 
 export default function Tela() {
@@ -15,6 +27,8 @@ export default function Tela() {
   const [xml, setXml] = useState(null);
   const [msg, setMsg] = useState('');
   const [erro, setErro] = useState('');
+  const [msgX, setMsgX] = useState('');
+  const [erroX, setErroX] = useState('');
 
   async function carregar() {
     const [a, b] = await Promise.all([api('/api/insumos', 'GET'), api('/api/compras', 'GET')]);
@@ -56,33 +70,41 @@ export default function Tela() {
     if (!r.ok) { alert('Erro ao excluir'); return; }
     carregar();
   }
+  function aplicar(it, insumoId) {
+    const ins = d.insumos.find((i) => String(i.id) === String(insumoId));
+    const q = ins && ins.unidade === 'ml' && it.tam ? num(it.qCom) * it.tam : num(it.qCom);
+    return { ...it, insumo_id: insumoId, quantidade: String(Math.round(q * 1000) / 1000) };
+  }
   async function lerXml(ev) {
-    setMsg(''); setErro('');
+    setMsgX(''); setErroX('');
     const file = ev.target.files && ev.target.files[0];
     if (!file) return;
     const doc = new DOMParser().parseFromString(await file.text(), 'application/xml');
     const dets = Array.from(doc.getElementsByTagName('det'));
-    if (!dets.length) { setErro('Não encontrei itens neste XML. Use o XML da nota fiscal eletrônica (NF-e).'); setXml(null); return; }
+    if (!dets.length) { setErroX('Não encontrei itens neste XML. Use o XML da nota fiscal eletrônica (NF-e).'); setXml(null); return; }
     const t = tag();
     const emit = doc.getElementsByTagName('emit')[0];
     setXml({
       fornecedor: emit ? t(emit, 'xNome') : '',
       data: (t(doc, 'dhEmi') || t(doc, 'dEmi') || hojeISO()).slice(0, 10),
-      itens: dets.map((x) => ({ desc: t(x, 'xProd'), quantidade: t(x, 'qCom'), valor_total: t(x, 'vProd'), insumo_id: '' })),
+      itens: dets.map((x) => {
+        const desc = t(x, 'xProd');
+        return aplicar({ desc, qCom: t(x, 'qCom'), tam: tamanho(desc), valor_total: t(x, 'vProd'), insumo_id: '', quantidade: t(x, 'qCom') }, sugerir(desc, d.insumos));
+      }),
     });
     ev.target.value = '';
   }
   async function lancarXml() {
-    setMsg(''); setErro('');
+    setMsgX(''); setErroX('');
     const itens = xml.itens.filter((i) => i.insumo_id).map((i) => ({ insumo_id: i.insumo_id, quantidade: num(i.quantidade), valor_total: num(i.valor_total), obs: i.desc }));
-    if (!itens.length) { setErro('Escolha o item do sistema em pelo menos uma linha da nota.'); return; }
+    if (!itens.length) { setErroX('Escolha o item do sistema em pelo menos uma linha da nota.'); return; }
     const r = await api('/api/compras', 'POST', { data: xml.data, fornecedor: xml.fornecedor, itens });
-    if (!r.ok) { setErro(r.d.erro || 'Erro'); return; }
-    setMsg(itens.length + ' item(ns) da nota lançados.');
+    if (!r.ok) { setErroX(r.d.erro || 'Erro'); return; }
+    setMsgX(itens.length + ' item(ns) da nota lançados. Veja em Compras recentes, mais abaixo.');
     setXml(null);
     carregar();
   }
-  const setLinha = (k, campo, v) => setXml({ ...xml, itens: xml.itens.map((it, j) => (j === k ? { ...it, [campo]: v } : it)) });
+  const setLinha = (k, campo, v) => setXml({ ...xml, itens: xml.itens.map((it, j) => (j === k ? (campo === 'insumo_id' ? aplicar(it, v) : { ...it, [campo]: v }) : it)) });
   const opcoes = d.insumos.map((i) => <option key={i.id} value={i.id}>{i.nome} ({i.unidade})</option>);
 
   return (
@@ -117,24 +139,28 @@ export default function Tela() {
         {xml && (
           <>
             <p className='aviso'>Fornecedor: <b>{xml.fornecedor || '-'}</b> · Data da nota: <b>{dtBR(xml.data)}</b></p>
-            <div className='tabela'>
-              <table>
-                <thead><tr><th>Item da nota</th><th>Qtd</th><th>Valor (R$)</th><th>Item no sistema</th></tr></thead>
-                <tbody>
-                  {xml.itens.map((it, k) => (
-                    <tr key={k}>
-                      <td>{it.desc}</td>
-                      <td><input value={it.quantidade} onChange={(e) => setLinha(k, 'quantidade', e.target.value)} /></td>
-                      <td><input value={it.valor_total} onChange={(e) => setLinha(k, 'valor_total', e.target.value)} /></td>
-                      <td><select value={it.insumo_id} onChange={(e) => setLinha(k, 'insumo_id', e.target.value)}><option value=''>Ignorar</option>{opcoes}</select></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <p className='aviso'>Para cada linha, confirme o item do sistema (já sugerimos quando o nome combina). Linhas em "Ignorar" não são lançadas. Quantidades de líquidos são convertidas para ml pelo tamanho do frasco (100 g conta como 100 ml).</p>
+            {xml.itens.map((it, k) => {
+              const ins = d.insumos.find((i) => String(i.id) === String(it.insumo_id));
+              return (
+                <div key={k} style={{ borderTop: '1px solid #332A15', paddingTop: 10, marginTop: 10 }}>
+                  <p style={{ margin: '0 0 8px' }}><b>{it.desc}</b></p>
+                  <label>Item no sistema</label>
+                  <select value={it.insumo_id} onChange={(e) => setLinha(k, 'insumo_id', e.target.value)}><option value=''>Ignorar esta linha</option>{opcoes}</select>
+                  <div className='linha'>
+                    <div><label>Quantidade{ins ? ' (' + ins.unidade + ')' : ''}</label><input value={it.quantidade} inputMode='decimal' onChange={(e) => setLinha(k, 'quantidade', e.target.value)} /></div>
+                    <div><label>Valor pago (R$)</label><input value={it.valor_total} inputMode='decimal' onChange={(e) => setLinha(k, 'valor_total', e.target.value)} /></div>
+                  </div>
+                  {ins && num(it.quantidade) > 0 && <p className='aviso'>Custo desta linha: {custoTxt(num(it.valor_total) / num(it.quantidade), ins.unidade)}{ins.unidade === 'ml' && it.tam ? ' · nota: ' + it.qCom + ' un × ' + it.tam + ' = ' + (num(it.qCom) * it.tam) : ''}</p>}
+                </div>
+              );
+            })}
+            {erroX && <p className='erro'>{erroX}</p>}
             <button type='button' className='btn' onClick={lancarXml}>Lançar itens escolhidos</button>
           </>
         )}
+        {!xml && erroX && <p className='erro'>{erroX}</p>}
+        {!xml && msgX && <p className='ok'>{msgX}</p>}
       </div>
 
       <form className='card' onSubmit={novoItem}>
