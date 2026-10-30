@@ -107,6 +107,7 @@ export default function Tela() {
         {msg && <p className='ok'>{msg}</p>}
         <button className='btn'>Registrar compra</button>
         <p className='aviso'>Quantidade em ml para líquidos (1 litro = 1000) e em unidades para vidro, válvula, rótulo e sacola.</p>
+        <p className='aviso'>Vidro com válvula: se o vidro já vem com a válvula, lance só o vidro, com o valor total pago. Use o item Válvula apenas quando comprá-la separada.</p>
       </form>
 
       <div className='card'>
@@ -139,7 +140,7 @@ export default function Tela() {
       <form className='card' onSubmit={novoItem}>
         <h2>Cadastrar item</h2>
         <div className='linha'>
-          <div style={{ flex: 2 }}><label>Nome</label><input value={n.nome} placeholder='Ex.: Essência Invictus, Vidro 50 ml, Válvula 50 ml' onChange={(e) => setN({ ...n, nome: e.target.value })} /></div>
+          <div style={{ flex: 2 }}><label>Nome</label><input value={n.nome} placeholder='Ex.: Essência Invictus, Vidro 50 ml, Etiqueta' onChange={(e) => setN({ ...n, nome: e.target.value })} /></div>
           <div><label>Tipo</label>
             <select value={n.categoria} onChange={(e) => setN({ ...n, categoria: e.target.value, unidade: ['essencia', 'fixador', 'veiculo'].includes(e.target.value) ? 'ml' : 'un' })}>
               {d.categorias.map((c) => <option key={c[0]} value={c[0]}>{c[1]}</option>)}
@@ -149,7 +150,7 @@ export default function Tela() {
         </div>
         <button className='btn'>Cadastrar item</button>
         <p><button type='button' className='bs' onClick={sincronizar}>Cadastrar itens do catálogo (essências novas)</button></p>
-        <p className='aviso'>Cria uma essência para cada fragrância do catálogo, além de fixador, veículo, rótulo, sacola e vidro e válvula de 25, 50 e 60 ml. Itens que já existem não são duplicados.</p>
+        <p className='aviso'>Cria uma essência para cada fragrância do catálogo, além de fixador, veículo, rótulo, sacola, válvula (única, serve para todos os volumes) e vidro de 25, 50 e 60 ml. Itens que já existem não são duplicados.</p>
       </form>
 
       <div className='card'>

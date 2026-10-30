@@ -8,7 +8,7 @@ export async function GET() {
   const g = await exigir(true);
   if (g.erro) return g.erro;
   await garantir(pool);
-  if ((await pool.query('select 1 from insumos limit 1')).rows.length === 0) await sincronizar(pool);
+  if ((await pool.query("select 1 from insumos where nome = 'Válvula'")).rows.length === 0) await sincronizar(pool);
   const r = await pool.query(`select i.id, i.nome, i.categoria, i.unidade, i.ativo,
       coalesce(sum(c.quantidade), 0)::float as qtd_comprada,
       coalesce(sum(c.valor_total), 0)::float as gasto,
