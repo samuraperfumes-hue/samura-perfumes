@@ -11,6 +11,7 @@ export default function Menu({ s }) {
         <Link href='/vendas'>Vendas</Link>
         <Link href='/entregas'>Entregas</Link>
         <Link href='/estoque'>Estoque</Link>
+        {s.papel === 'admin' && <Link href='/compras'>Compras</Link>}
         <Link href='/agenda'>Agenda</Link>
         <Link href='/comissoes'>Comissões</Link>
         {s.papel === 'admin' && <Link href='/vendedores'>Vendedores</Link>}
