@@ -1,6 +1,6 @@
 import { pool } from '../../../lib/db';
 import { exigir } from '../../../lib/guard';
-import { garantir, CATEGORIAS } from '../../../lib/custos';
+import { garantir, sincronizar, CATEGORIAS } from '../../../lib/custos';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,6 +8,7 @@ export async function GET() {
   const g = await exigir(true);
   if (g.erro) return g.erro;
   await garantir(pool);
+  if ((await pool.query('select 1 from insumos limit 1')).rows.length === 0) await sincronizar(pool);
   const r = await pool.query(`select i.id, i.nome, i.categoria, i.unidade, i.ativo,
       coalesce(sum(c.quantidade), 0)::float as qtd_comprada,
       coalesce(sum(c.valor_total), 0)::float as gasto,
@@ -24,6 +25,7 @@ export async function POST(req) {
   if (g.erro) return g.erro;
   await garantir(pool);
   const b = await req.json();
+  if (b.acao === 'sincronizar') return Response.json({ ok: true, novos: await sincronizar(pool) });
   const nome = String(b.nome || '').trim().slice(0, 120);
   const cat = CATEGORIAS.some((c) => c[0] === b.categoria) ? b.categoria : 'outro';
   const un = b.unidade === 'ml' ? 'ml' : 'un';

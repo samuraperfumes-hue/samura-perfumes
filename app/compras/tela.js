@@ -43,6 +43,13 @@ export default function Tela() {
     await carregar();
     setF((x) => ({ ...x, insumo_id: String(r.d.id) }));
   }
+  async function sincronizar() {
+    setMsg(''); setErro('');
+    const r = await api('/api/insumos', 'POST', { acao: 'sincronizar' });
+    if (!r.ok) { setErro(r.d.erro || 'Erro'); return; }
+    setMsg(r.d.novos ? r.d.novos + ' item(ns) novo(s) cadastrado(s) a partir do catálogo.' : 'Tudo já estava cadastrado.');
+    carregar();
+  }
   async function excluir(c) {
     if (!confirm('Excluir a compra de ' + c.nome + ' (' + brl(c.valor_total) + ')? O custo médio será recalculado.')) return;
     const r = await api('/api/compras/' + c.id, 'DELETE');
@@ -141,6 +148,8 @@ export default function Tela() {
             <select value={n.unidade} onChange={(e) => setN({ ...n, unidade: e.target.value })}><option value='ml'>ml</option><option value='un'>unidade</option></select></div>
         </div>
         <button className='btn'>Cadastrar item</button>
+        <p><button type='button' className='bs' onClick={sincronizar}>Cadastrar itens do catálogo (essências novas)</button></p>
+        <p className='aviso'>Cria uma essência para cada fragrância do catálogo, além de fixador, veículo, rótulo, sacola e vidro e válvula de 25, 50 e 60 ml. Itens que já existem não são duplicados.</p>
       </form>
 
       <div className='card'>
