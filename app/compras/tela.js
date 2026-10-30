@@ -13,9 +13,33 @@ const sugerir = (desc, insumos) => {
   insumos.forEach((i) => {
     const tk = norm(i.nome).split(/[^a-z0-9]+/).filter((x) => x && x !== 'essencia');
     if (!tk.length || !tk.every((x) => alvo.has(x))) return;
+    if (alvo.has('gold') && !tk.includes('gold')) return;
     if (tk.length > pontos) { melhor = i; pontos = tk.length; }
   });
   return melhor ? String(melhor.id) : '';
+};
+const ML = ['essencia', 'fixador', 'veiculo'];
+const categoriaDe = (desc) => {
+  const t = norm(desc);
+  if (/\bfixador\b/.test(t)) return 'fixador';
+  if (/\b(veiculo|alcool|base)\b/.test(t)) return 'veiculo';
+  if (/\b(valvula)\b/.test(t)) return 'valvula';
+  if (/\b(frasco|vidro)\b/.test(t)) return 'vidro';
+  if (/\b(rotulo|etiqueta)\b/.test(t)) return 'rotulo';
+  if (/\b(sacola)\b/.test(t)) return 'sacola';
+  if (/\bessencia\b/.test(t)) return 'essencia';
+  return 'outro';
+};
+const SIGLAS = ['edt', 'edp', 'edc', 'xx', 'vip'];
+const titulo = (w) => (SIGLAS.includes(w.toLowerCase()) ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+const nomeLimpo = (desc, cat) => {
+  let t = String(desc).replace(/\((?:m|f|u)\)/gi, ' ').replace(/\(?\d+(?:[.,]\d+)?\s*(?:ml|g)\)?/gi, ' ').replace(/\s+-\s+/g, ' ');
+  const gold = /\bgold\b/i.test(t);
+  t = t.replace(/\bgold\b/gi, ' ').replace(/^\s*ess[eê]ncia\s+/i, '').replace(/\bperfumaria\b/gi, ' ').replace(/\bfina\b/gi, ' ').replace(/\b[aá]rabe\b/gi, ' ').replace(/\bimportad[ao]\b/gi, ' ');
+  const palavras = t.split(/\s+/).filter(Boolean).map(titulo);
+  if (gold) palavras.push('Gold');
+  const base = palavras.join(' ');
+  return cat === 'essencia' ? 'Essência ' + base : base;
 };
 const tag = (t) => (el, n) => { const x = el.getElementsByTagName(n)[0]; return x ? x.textContent : ''; };
 
@@ -72,7 +96,8 @@ export default function Tela() {
   }
   function aplicar(it, insumoId) {
     const ins = d.insumos.find((i) => String(i.id) === String(insumoId));
-    const q = ins && ins.unidade === 'ml' && it.tam ? num(it.qCom) * it.tam : num(it.qCom);
+    const ehMl = insumoId === '__novo__' ? ML.includes(it.cat) : ins && ins.unidade === 'ml';
+    const q = ehMl && it.tam ? num(it.qCom) * it.tam : num(it.qCom);
     return { ...it, insumo_id: insumoId, quantidade: String(Math.round(q * 1000) / 1000) };
   }
   async function lerXml(ev) {
@@ -89,18 +114,33 @@ export default function Tela() {
       data: (t(doc, 'dhEmi') || t(doc, 'dEmi') || hojeISO()).slice(0, 10),
       itens: dets.map((x) => {
         const desc = t(x, 'xProd');
-        return aplicar({ desc, qCom: t(x, 'qCom'), tam: tamanho(desc), valor_total: t(x, 'vProd'), insumo_id: '', quantidade: t(x, 'qCom') }, sugerir(desc, d.insumos));
+        const cat = categoriaDe(desc);
+        const sug = sugerir(desc, d.insumos);
+        return aplicar({ desc, cat, novoNome: nomeLimpo(desc, cat), qCom: t(x, 'qCom'), tam: tamanho(desc), valor_total: t(x, 'vProd'), insumo_id: '', quantidade: t(x, 'qCom') }, sug || '__novo__');
       }),
     });
     ev.target.value = '';
   }
   async function lancarXml() {
     setMsgX(''); setErroX('');
-    const itens = xml.itens.filter((i) => i.insumo_id).map((i) => ({ insumo_id: i.insumo_id, quantidade: num(i.quantidade), valor_total: num(i.valor_total), obs: i.desc }));
-    if (!itens.length) { setErroX('Escolha o item do sistema em pelo menos uma linha da nota.'); return; }
+    const linhas = xml.itens.filter((i) => i.insumo_id);
+    if (!linhas.length) { setErroX('Escolha o item do sistema em pelo menos uma linha da nota.'); return; }
+    const itens = [];
+    let criados = 0;
+    for (const i of linhas) {
+      let id = i.insumo_id;
+      if (id === '__novo__') {
+        if (!i.novoNome.trim()) { setErroX('Informe o nome do novo item: ' + i.desc); return; }
+        const r0 = await api('/api/insumos', 'POST', { nome: i.novoNome.trim(), categoria: i.cat, unidade: ML.includes(i.cat) ? 'ml' : 'un', reaproveitar: true });
+        if (!r0.ok) { setErroX(r0.d.erro || 'Erro ao criar item.'); return; }
+        id = String(r0.d.id);
+        if (!r0.d.existente) criados++;
+      }
+      itens.push({ insumo_id: id, quantidade: num(i.quantidade), valor_total: num(i.valor_total), obs: i.desc });
+    }
     const r = await api('/api/compras', 'POST', { data: xml.data, fornecedor: xml.fornecedor, itens });
     if (!r.ok) { setErroX(r.d.erro || 'Erro'); return; }
-    setMsgX(itens.length + ' item(ns) da nota lançados. Veja em Compras recentes, mais abaixo.');
+    setMsgX(itens.length + ' item(ns) da nota lançados' + (criados ? ', com ' + criados + ' item(ns) novo(s) criado(s)' : '') + '. Veja em Compras recentes, mais abaixo.');
     setXml(null);
     carregar();
   }
@@ -141,12 +181,14 @@ export default function Tela() {
             <p className='aviso'>Fornecedor: <b>{xml.fornecedor || '-'}</b> · Data da nota: <b>{dtBR(xml.data)}</b></p>
             <p className='aviso'>Para cada linha, confirme o item do sistema (já sugerimos quando o nome combina). Linhas em "Ignorar" não são lançadas. Quantidades de líquidos são convertidas para ml pelo tamanho do frasco (100 g conta como 100 ml).</p>
             {xml.itens.map((it, k) => {
-              const ins = d.insumos.find((i) => String(i.id) === String(it.insumo_id));
+              const novo = it.insumo_id === '__novo__';
+              const ins = novo ? { unidade: ML.includes(it.cat) ? 'ml' : 'un' } : d.insumos.find((i) => String(i.id) === String(it.insumo_id));
               return (
                 <div key={k} style={{ borderTop: '1px solid #332A15', paddingTop: 10, marginTop: 10 }}>
                   <p style={{ margin: '0 0 8px' }}><b>{it.desc}</b></p>
                   <label>Item no sistema</label>
-                  <select value={it.insumo_id} onChange={(e) => setLinha(k, 'insumo_id', e.target.value)}><option value=''>Ignorar esta linha</option>{opcoes}</select>
+                  <select value={it.insumo_id} onChange={(e) => setLinha(k, 'insumo_id', e.target.value)}><option value=''>Ignorar esta linha</option><option value='__novo__'>+ Criar item novo</option>{opcoes}</select>
+                  {novo && <><label>Nome do novo item</label><input value={it.novoNome} onChange={(e) => setLinha(k, 'novoNome', e.target.value)} /></>}
                   <div className='linha'>
                     <div><label>Quantidade{ins ? ' (' + ins.unidade + ')' : ''}</label><input value={it.quantidade} inputMode='decimal' onChange={(e) => setLinha(k, 'quantidade', e.target.value)} /></div>
                     <div><label>Valor pago (R$)</label><input value={it.valor_total} inputMode='decimal' onChange={(e) => setLinha(k, 'valor_total', e.target.value)} /></div>

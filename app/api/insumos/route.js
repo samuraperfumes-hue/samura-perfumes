@@ -34,7 +34,11 @@ export async function POST(req) {
     const r = await pool.query('insert into insumos (nome, categoria, unidade) values ($1, $2, $3) returning id', [nome, cat, un]);
     return Response.json({ ok: true, id: r.rows[0].id });
   } catch (e) {
-    if (e.code === '23505') return Response.json({ erro: 'Já existe um item com esse nome.' }, { status: 400 });
+    if (e.code === '23505') {
+      const ex = (await pool.query('select id from insumos where lower(nome) = lower($1)', [nome])).rows[0];
+      if (b.reaproveitar && ex) return Response.json({ ok: true, id: ex.id, existente: true });
+      return Response.json({ erro: 'Já existe um item com esse nome.' }, { status: 400 });
+    }
     throw e;
   }
 }
