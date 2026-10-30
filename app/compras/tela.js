@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { api, brl, dtBR, hojeISO } from '../util';
+import { chaveEq } from '../../lib/custos';
 
 const num = (v) => Number(String(v).replace(',', '.'));
 const fmtQ = (v, un) => Number(v).toLocaleString('pt-BR', { maximumFractionDigits: 3 }) + ' ' + un;
@@ -41,6 +42,17 @@ const nomeLimpo = (desc, cat) => {
   const base = palavras.join(' ');
   return cat === 'essencia' ? 'Essência ' + base : base;
 };
+// Procura a fragrância real do fornecedor na tabela de equivalências (com Gold, ou sem Gold + sufixo).
+const resolver = (desc, eq) => {
+  const mapa = new Map(eq.map((e) => [e.chave, e]));
+  const direto = mapa.get(chaveEq(desc));
+  if (direto) return { real: direto.nome_real, origem: direto.origem };
+  if (/\bgold\b/i.test(desc)) {
+    const sem = mapa.get(chaveEq(desc, true));
+    if (sem) return { real: /\bgold\b/i.test(sem.nome_real) ? sem.nome_real : sem.nome_real + ' Gold', origem: sem.origem };
+  }
+  return null;
+};
 const tag = (t) => (el, n) => { const x = el.getElementsByTagName(n)[0]; return x ? x.textContent : ''; };
 
 export default function Tela() {
@@ -49,14 +61,18 @@ export default function Tela() {
   const [f, setF] = useState({ insumo_id: '', data: hojeISO(), quantidade: '', valor_total: '', fornecedor: '', obs: '' });
   const [n, setN] = useState({ nome: '', categoria: 'essencia', unidade: 'ml' });
   const [xml, setXml] = useState(null);
+  const [eq, setEq] = useState([]);
+  const [ren, setRen] = useState(null);
+  const [ne, setNe] = useState({ origem: '', nome_real: '' });
   const [msg, setMsg] = useState('');
   const [erro, setErro] = useState('');
   const [msgX, setMsgX] = useState('');
   const [erroX, setErroX] = useState('');
 
   async function carregar() {
-    const [a, b] = await Promise.all([api('/api/insumos', 'GET'), api('/api/compras', 'GET')]);
+    const [a, b, c] = await Promise.all([api('/api/insumos', 'GET'), api('/api/compras', 'GET'), api('/api/equivalencias', 'GET')]);
     if (a.ok) setD(a.d);
+    if (c.ok) setEq(c.d.equivalencias);
     if (b.ok) setCompras(b.d.compras);
   }
   useEffect(() => { carregar(); }, []);
@@ -94,6 +110,24 @@ export default function Tela() {
     if (!r.ok) { alert('Erro ao excluir'); return; }
     carregar();
   }
+  async function renomear(i) {
+    const r = await api('/api/insumos/' + i.id, 'PATCH', { nome: ren.nome });
+    if (!r.ok) { alert(r.d.erro || 'Erro ao renomear.'); return; }
+    setRen(null);
+    carregar();
+  }
+  async function salvarEq(e) {
+    e.preventDefault();
+    const r = await api('/api/equivalencias', 'POST', ne);
+    if (!r.ok) { alert(r.d.erro || 'Erro'); return; }
+    setNe({ origem: '', nome_real: '' });
+    carregar();
+  }
+  async function apagarEq(e) {
+    if (!confirm('Remover a equivalência de ' + e.origem + '?')) return;
+    await api('/api/equivalencias?chave=' + encodeURIComponent(e.chave), 'DELETE');
+    carregar();
+  }
   function aplicar(it, insumoId) {
     const ins = d.insumos.find((i) => String(i.id) === String(insumoId));
     const ehMl = insumoId === '__novo__' ? ML.includes(it.cat) : ins && ins.unidade === 'ml';
@@ -115,8 +149,11 @@ export default function Tela() {
       itens: dets.map((x) => {
         const desc = t(x, 'xProd');
         const cat = categoriaDe(desc);
-        const sug = sugerir(desc, d.insumos);
-        return aplicar({ desc, cat, novoNome: nomeLimpo(desc, cat), qCom: t(x, 'qCom'), tam: tamanho(desc), valor_total: t(x, 'vProd'), insumo_id: '', quantidade: t(x, 'qCom') }, sug || '__novo__');
+        const res = cat === 'essencia' ? resolver(desc, eq) : null;
+        const padrao = nomeLimpo(desc, cat);
+        const nome = res ? 'Essência ' + res.real : padrao;
+        const sug = sugerir(res ? nome : desc, d.insumos);
+        return aplicar({ desc, cat, padrao, equiv: res ? res.real : '', novoNome: nome, qCom: t(x, 'qCom'), tam: tamanho(desc), valor_total: t(x, 'vProd'), insumo_id: '', quantidade: t(x, 'qCom') }, sug || '__novo__');
       }),
     });
     ev.target.value = '';
@@ -135,6 +172,11 @@ export default function Tela() {
         if (!r0.ok) { setErroX(r0.d.erro || 'Erro ao criar item.'); return; }
         id = String(r0.d.id);
         if (!r0.d.existente) criados++;
+        // Lembra a equivalência quando o nome foi ajustado à mão (ex.: nome da nota -> fragrância real).
+        if (i.cat === 'essencia' && i.novoNome.trim() !== i.padrao && !i.equiv) {
+          const real = i.novoNome.trim().replace(/^ess[eê]ncia\s+/i, '');
+          if (real && chaveEq(i.desc)) await api('/api/equivalencias', 'POST', { origem: i.desc, nome_real: real });
+        }
       }
       itens.push({ insumo_id: id, quantidade: num(i.quantidade), valor_total: num(i.valor_total), obs: i.desc });
     }
@@ -188,6 +230,7 @@ export default function Tela() {
                   <p style={{ margin: '0 0 8px' }}><b>{it.desc}</b></p>
                   <label>Item no sistema</label>
                   <select value={it.insumo_id} onChange={(e) => setLinha(k, 'insumo_id', e.target.value)}><option value=''>Ignorar esta linha</option><option value='__novo__'>+ Criar item novo</option>{opcoes}</select>
+                  {it.equiv && <p className='aviso'>Equivalência conhecida: esta linha é <b>{it.equiv}</b>.</p>}
                   {novo && <><label>Nome do novo item</label><input value={it.novoNome} onChange={(e) => setLinha(k, 'novoNome', e.target.value)} /></>}
                   <div className='linha'>
                     <div><label>Quantidade{ins ? ' (' + ins.unidade + ')' : ''}</label><input value={it.quantidade} inputMode='decimal' onChange={(e) => setLinha(k, 'quantidade', e.target.value)} /></div>
@@ -225,20 +268,47 @@ export default function Tela() {
         <h2>Custo atual dos itens</h2>
         <div className='tabela'>
           <table>
-            <thead><tr><th>Item</th><th>Comprado</th><th>Gasto</th><th>Custo médio</th><th>Última compra</th></tr></thead>
+            <thead><tr><th>Item</th><th>Comprado</th><th>Gasto</th><th>Custo médio</th><th>Última compra</th><th></th></tr></thead>
             <tbody>
               {d.insumos.map((i) => (
                 <tr key={i.id}>
                   <td>{i.nome}</td><td>{fmtQ(i.qtd_comprada, i.unidade)}</td><td>{brl(i.gasto)}</td>
                   <td><b>{custoTxt(i.custo_medio, i.unidade)}</b></td>
                   <td>{i.ultima_compra ? dtBR(i.ultima_compra) + ' · ' + custoTxt(i.ultimo_custo, i.unidade) : '-'}</td>
+                  <td>{ren && ren.id === i.id
+                    ? <><input value={ren.nome} onChange={(e) => setRen({ id: i.id, nome: e.target.value })} /> <button type='button' className='bs' onClick={() => renomear(i)}>Salvar</button> <button type='button' className='bs' onClick={() => setRen(null)}>Cancelar</button></>
+                    : <button type='button' className='bs' onClick={() => setRen({ id: i.id, nome: i.nome })}>Renomear</button>}</td>
                 </tr>
               ))}
-              {d.insumos.length === 0 && <tr><td colSpan={5}>Cadastre os itens que você compra para começar.</td></tr>}
+              {d.insumos.length === 0 && <tr><td colSpan={6}>Cadastre os itens que você compra para começar.</td></tr>}
             </tbody>
           </table>
         </div>
         <p className='aviso'>Custo médio = total gasto ÷ total comprado. Cada nova compra atualiza o custo automaticamente.</p>
+        <p className='aviso'>Renomear para um nome que já existe junta as compras no item existente (útil para corrigir nomes vindos da nota).</p>
+      </div>
+
+      <div className='card'>
+        <h2>Equivalência de nomes (fornecedor → fragrância real)</h2>
+        <p className='aviso'>Usada na importação do XML: quando a nota traz o nome da loja do fornecedor, o sistema já cria/usa a essência com o nome real. Itens novos que você renomear na importação são lembrados aqui.</p>
+        <form onSubmit={salvarEq}>
+          <div className='linha'>
+            <div><label>Nome do fornecedor (como vem na nota)</label><input value={ne.origem} onChange={(e) => setNe({ ...ne, origem: e.target.value })} /></div>
+            <div><label>Fragrância real</label><input value={ne.nome_real} onChange={(e) => setNe({ ...ne, nome_real: e.target.value })} /></div>
+          </div>
+          <button className='btn'>Salvar equivalência</button>
+        </form>
+        <div className='tabela'>
+          <table>
+            <thead><tr><th>Fornecedor</th><th>Fragrância real</th><th></th></tr></thead>
+            <tbody>
+              {eq.map((e) => (
+                <tr key={e.chave}><td>{e.origem}</td><td>{e.nome_real}</td><td><button type='button' className='bs' onClick={() => apagarEq(e)}>Remover</button></td></tr>
+              ))}
+              {eq.length === 0 && <tr><td colSpan={3}>Nenhuma equivalência cadastrada.</td></tr>}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div className='card'>
