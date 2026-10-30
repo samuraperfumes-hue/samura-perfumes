@@ -40,6 +40,7 @@ export default function Tela({ admin, eu, vendedores }) {
   const [dias, setDias] = useState('30');
   const [erro, setErro] = useState('');
   const [ok, setOk] = useState('');
+  const [agrad, setAgrad] = useState(null);
   const [todas, setTodas] = useState(false);
   const [busca, setBusca] = useState('');
 
@@ -136,6 +137,12 @@ export default function Tela({ admin, eu, vendedores }) {
     const r = await api('/api/vendas', 'POST', body);
     if (!r.ok) return setErro(r.d.erro || 'Erro ao salvar.');
     setOk('Venda ' + r.d.codigo + ' salva.');
+    if (lista.some((l) => l.entrega === 'entregue')) {
+      const pn = String(cli.nome).trim().split(' ')[0];
+      const h = new Date().getHours();
+      const texto = (h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite') + ', ' + pn + '! Queremos saber como está sendo sua experiência com nosso perfume, seu feedback nos motiva a melhorar sempre! Samura Perfumes';
+      setAgrad({ nome: cli.nome, url: wa(cli.telefone, texto) });
+    } else setAgrad(null);
     setItens([novoItem()]); setCliente(''); setDesconto('0'); setObs(''); setCTipo(''); setCTaxa(''); setModo('pendente'); setValorPago(''); setDataPrev(''); setData(hojeISO());
     carregar();
   }
@@ -209,6 +216,9 @@ export default function Tela({ admin, eu, vendedores }) {
         {modo === 'parcelado' && gerarParcelas().length > 0 && <p className='aviso'>{gerarParcelas().map((p) => brl(p.valor) + ' em ' + dtBR(p.data_prevista)).join(' · ')}</p>}
         {erro && <p className='erro'>{erro}</p>}
         {ok && <p className='ok'>{ok}</p>}
+        {agrad && (agrad.url
+          ? <p><a className='bs' href={agrad.url} target='_blank' rel='noreferrer'>Enviar agradecimento para {agrad.nome}</a> <button type='button' className='bs' onClick={() => setAgrad(null)}>Fechar</button></p>
+          : <p className='aviso'>{agrad.nome} não tem WhatsApp cadastrado (cadastre em Clientes).</p>)}
         <button className='btn'>Finalizar e salvar venda</button>
         {admin && <p style={{ textAlign: 'right', margin: '8px 0 0' }}><button type='button' className='bs' onClick={() => setVerCom(!verCom)} style={{ opacity: 0.5 }}>{verCom ? 'Ocultar comissão' : 'Comissão'}</button></p>}
       </form>

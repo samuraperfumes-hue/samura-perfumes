@@ -31,6 +31,7 @@ export default function Tela({ admin }) {
         }
       });
       setAgradecer([...vistos.values()]);
+      if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
     }
     carregar();
   }
