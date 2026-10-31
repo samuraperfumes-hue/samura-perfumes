@@ -25,15 +25,15 @@ export async function POST(req) {
   }
   if (b.acao === 'receita') {
     const fid = Number(b.fragrancia_id);
-    const itens = (b.itens || []).map((x) => ({ insumo_id: Number(x.insumo_id), pct: Number(String(x.pct).replace(',', '.')) })).filter((x) => x.insumo_id);
-    if (itens.some((x) => !(x.pct > 0 && x.pct <= 100))) return Response.json({ erro: 'Cada porcentagem precisa estar entre 0 e 100.' }, { status: 400 });
+    const itens = (b.itens || []).map((x) => ({ insumo_id: Number(x.insumo_id), ml: Number(String(x.ml).replace(',', '.')) })).filter((x) => x.insumo_id);
+    if (itens.some((x) => !(x.ml > 0))) return Response.json({ erro: 'Informe os ml de cada item (maior que zero).' }, { status: 400 });
     if (new Set(itens.map((x) => x.insumo_id)).size !== itens.length) return Response.json({ erro: 'O mesmo item aparece duas vezes na receita.' }, { status: 400 });
-    if (itens.reduce((t, x) => t + x.pct, 0) > 100.0001) return Response.json({ erro: 'A soma das porcentagens passa de 100%.' }, { status: 400 });
+    const total = itens.reduce((t, x) => t + x.ml, 0);
     const cx = await pool.connect();
     try {
       await cx.query('begin');
       await cx.query('delete from receitas where fragrancia_id = $1', [fid]);
-      for (const x of itens) await cx.query('insert into receitas (fragrancia_id, insumo_id, pct) values ($1, $2, $3)', [fid, x.insumo_id, x.pct]);
+      for (const x of itens) await cx.query('insert into receitas (fragrancia_id, insumo_id, pct, ml) values ($1, $2, $3, $4)', [fid, x.insumo_id, Math.min(100, (x.ml / total) * 100), x.ml]);
       await cx.query('commit');
     } catch (e) {
       await cx.query('rollback');

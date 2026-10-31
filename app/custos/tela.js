@@ -34,7 +34,7 @@ export default function Tela() {
   }
 
   if (!d) return <div className='card'><p>{erro || 'Carregando...'}</p></div>;
-  const soma = ed ? ed.itens.reduce((t, x) => t + (num(x.pct) || 0), 0) : 0;
+  const soma = ed ? ed.itens.reduce((t, x) => t + (num(x.ml) || 0), 0) : 0;
   const mudar = (i, campo, v) => setEd({ ...ed, itens: ed.itens.map((x, k) => (k === i ? { ...x, [campo]: v } : x)) });
 
   return (
@@ -66,26 +66,26 @@ export default function Tela() {
             <>
               {ed.itens.map((x, i) => (
                 <div className='linha' key={i}>
-                  <div style={{ flex: 3 }}><label>Essência / fixador</label>
+                  <div style={{ flex: 3 }}><label>Essência / fixador / veículo</label>
                     <select value={x.insumo_id} onChange={(e) => mudar(i, 'insumo_id', e.target.value)}>
                       <option value=''>Escolha...</option>
                       {d.insumos.map((o) => <option key={o.id} value={o.id}>{o.nome}</option>)}
                     </select></div>
-                  <div><label>% do frasco</label><input value={x.pct} inputMode='decimal' onChange={(e) => mudar(i, 'pct', e.target.value)} /></div>
+                  <div><label>ml no lote</label><input value={x.ml} inputMode='decimal' onChange={(e) => mudar(i, 'ml', e.target.value)} /></div>
                   <div><button type='button' className='bs' onClick={() => setEd({ ...ed, itens: ed.itens.filter((_, k) => k !== i) })}>Remover</button></div>
                 </div>
               ))}
-              <p><button type='button' className='bs' onClick={() => setEd({ ...ed, itens: [...ed.itens, { insumo_id: '', pct: '' }] })}>+ Adicionar item</button></p>
-              <p className={soma > 100 ? 'erro' : 'aviso'}>Soma: {pct(soma)} · Veículo (o restante): {pct(Math.max(0, 100 - soma))}</p>
+              <p><button type='button' className='bs' onClick={() => setEd({ ...ed, itens: [...ed.itens, { insumo_id: '', ml: '' }] })}>+ Adicionar item</button></p>
+              <p className='aviso'>Lote total: {Number(soma).toLocaleString('pt-BR', { maximumFractionDigits: 3 })} ml. Informe as quantidades de um lote qualquer (ex.: 300 ml); o sistema usa só a proporção, então vale para qualquer tamanho de lote.</p>
               <button type='button' className='btn' onClick={salvarReceita}>Salvar receita</button>{' '}
               <button type='button' className='bs' onClick={() => setEd(null)}>Cancelar</button>
             </>
           ) : (
             <>
               <p>{f.itens.length
-                ? f.itens.map((x) => x.nome + ' ' + pct(x.pct)).join(' + ') + ' + Veículo ' + pct(f.pct_veiculo)
+                ? f.itens.map((x) => x.nome + ' ' + Number(x.ml ?? x.pct).toLocaleString('pt-BR', { maximumFractionDigits: 3 }) + ' ml (' + pct(x.pct) + ')').join(' + ') + (f.pct_veiculo ? ' + Veículo (restante) ' + pct(f.pct_veiculo) : '')
                 : 'Receita ainda não definida.'}</p>
-              <button type='button' className='bs' onClick={() => setEd({ fid: f.id, itens: f.itens.length ? f.itens.map((x) => ({ insumo_id: String(x.insumo_id), pct: String(x.pct) })) : [{ insumo_id: '', pct: '' }] })}>Editar receita</button>
+              <button type='button' className='bs' onClick={() => setEd({ fid: f.id, itens: f.itens.length ? f.itens.map((x) => ({ insumo_id: String(x.insumo_id), ml: String(x.ml ?? x.pct) })) : [{ insumo_id: '', ml: '' }] })}>Editar receita</button>
             </>
           )}
           {f.apresentacoes.length > 0 && (
@@ -108,7 +108,7 @@ export default function Tela() {
           )}
         </div>
       ))}
-      <p className='aviso'>Custo do frasco = volume × (% de cada essência/fixador × custo médio por ml + % do veículo × custo do veículo) + vidro + válvula (se separada) + rótulo + sacola. O custo vem das compras lançadas em Compras.</p>
+      <p className='aviso'>Custo do frasco = volume × custo por ml do lote (soma dos ml de cada item × custo médio ÷ ml total do lote) + vidro + válvula (se separada) + rótulo + sacola. O custo vem das compras lançadas em Compras.</p>
     </>
   );
 }
