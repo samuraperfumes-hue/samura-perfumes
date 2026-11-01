@@ -10,6 +10,8 @@ export default function Tela() {
   const [f, setF] = useState(null);
   const [erro, setErro] = useState('');
   const [msg, setMsg] = useState('');
+  const [vol, setVol] = useState(null);
+  const [ordem, setOrdem] = useState('margem');
 
   async function carregar() {
     const r = await api('/api/custos', 'GET');
@@ -54,6 +56,40 @@ export default function Tela() {
         </div>
         {todasFaltas.length > 0 && <p className='aviso'>⚠ Valores aproximados. Falta: {[...new Set(todasFaltas)].join(', ')}.</p>}
       </div>
+
+      {d.fragrancias.length > 0 && (() => {
+        const mls = d.volumes.map((v) => v.ml);
+        const ml = vol || mls[0];
+        const linhas = d.fragrancias.map((f) => ({ f, x: f.volumes.find((y) => y.ml === ml) })).filter((l) => l.x);
+        linhas.sort((a, b) => (ordem === 'nome' ? a.f.nome.localeCompare(b.f.nome) : ordem === 'custo' ? b.x.custo - a.x.custo : a.x.margem - b.x.margem));
+        const max = Math.max(1, ...linhas.map((l) => Math.abs(l.x.margem || 0)));
+        const med = linhas.length ? linhas[0].x.mediana : null;
+        return (
+          <div className='card'>
+            <h2>Por fragrância — quem destoa</h2>
+            <div className='linha'>
+              <div><label>Volume</label><select value={ml} onChange={(e) => setVol(Number(e.target.value))}>{mls.map((m) => <option key={m} value={m}>{m} ml</option>)}</select></div>
+              <div><label>Ordenar por</label><select value={ordem} onChange={(e) => setOrdem(e.target.value)}><option value='margem'>Menor margem</option><option value='custo'>Maior custo</option><option value='nome'>Nome</option></select></div>
+            </div>
+            <p className='aviso'>Mesma receita padrão; muda só o custo da essência de cada fragrância. Margem mediana: <b>{med == null ? '-' : pct(med)}</b>. Em vermelho: margem a mais de 10 pontos da mediana.</p>
+            <div className='tabela'>
+              <table>
+                <thead><tr><th>Fragrância</th><th>Essência</th><th>Custo</th><th>Preço</th><th>Lucro</th><th>Margem</th><th style={{ minWidth: 140 }}></th></tr></thead>
+                <tbody>
+                  {linhas.map(({ f, x }) => (
+                    <tr key={f.id} style={x.destoa ? { color: '#ff6b6b' } : undefined}>
+                      <td>{x.destoa ? '⚠ ' : ''}{f.nome}</td>
+                      <td>{f.sem_compra ? <i>sem compra (usa média)</i> : mlTxt(f.custo_essencia)}</td>
+                      <td>{brl(x.custo)}</td><td>{brl(x.preco)}</td><td>{brl(x.lucro)}</td><td><b>{x.margem == null ? '-' : pct(x.margem)}</b></td>
+                      <td><div style={{ height: 10, borderRadius: 5, width: Math.max(2, (Math.abs(x.margem || 0) / max) * 100) + '%', background: x.margem < 0 ? '#ff6b6b' : x.destoa ? '#ff9f43' : '#c9a24b' }} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      })()}
 
       <div className='card'>
         <h2>Composição do custo</h2>
