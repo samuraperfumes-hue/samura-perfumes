@@ -8,7 +8,7 @@ const dig = (s) => String(s || '').replace(/[^0-9]/g, '');
 export async function GET() {
   const g = await exigir(false);
   if (g.erro) return g.erro;
-  const base = 'select c.id, c.nome, c.telefone, c.observacoes, c.vendedor_id, u.nome as vendedor from clientes c join usuarios u on u.id = c.vendedor_id';
+  const base = "select c.id, c.nome, c.telefone, c.observacoes, c.vendedor_id, u.nome as vendedor, (select max(v.data_venda) from vendas v where v.cliente_id = c.id and not v.cancelada) as ultima_compra, (select count(*)::int from vendas v where v.cliente_id = c.id and not v.cancelada) as compras from clientes c join usuarios u on u.id = c.vendedor_id";
   const r = g.s.papel === 'admin'
     ? await q(base + ' order by c.nome')
     : await q(base + ' where c.vendedor_id = $1 order by c.nome', [g.s.id]);
