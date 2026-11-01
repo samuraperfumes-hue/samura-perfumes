@@ -7,7 +7,7 @@ const num = (v) => Number(String(v).replace(',', '.'));
 const fmtQ = (v, un) => Number(v).toLocaleString('pt-BR', { maximumFractionDigits: 3 }) + ' ' + un;
 const custoTxt = (v, un) => (v == null ? '-' : brl(v) + (un === 'ml' ? '/ml' : '/un'));
 const norm = (t) => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-const tamanho = (desc) => { const m = [...String(desc).matchAll(/(\d+(?:[.,]\d+)?)\s*(ml|g)\b/gi)].pop(); return m ? Number(m[1].replace(',', '.')) : null; };
+const tamanho = (desc, un) => { const m = [...String(desc).matchAll(/(\d+(?:[.,]\d+)?)\s*(ml|g|lts?|l|litros?)(?![a-z0-9])/gi)].pop(); if (m) { const n = Number(m[1].replace(',', '.')); return /^(ml|g)$/i.test(m[2]) ? n : n * 1000; } return /^(l|lt|lts|litro|litros)$/i.test(String(un || '').trim()) ? 1000 : null; };
 const sugerir = (desc, insumos) => {
   const alvo = new Set(norm(desc).split(/[^a-z0-9]+/).filter(Boolean));
   let melhor = null; let pontos = 0;
@@ -153,7 +153,7 @@ export default function Tela() {
         const padrao = nomeLimpo(desc, cat);
         const nome = res ? 'Essência ' + res.real : padrao;
         const sug = sugerir(res ? nome : desc, d.insumos);
-        return aplicar({ desc, cat, padrao, equiv: res ? res.real : '', novoNome: nome, qCom: t(x, 'qCom'), tam: tamanho(desc), valor_total: t(x, 'vProd'), insumo_id: '', quantidade: t(x, 'qCom') }, sug || '__novo__');
+        return aplicar({ desc, cat, padrao, equiv: res ? res.real : '', novoNome: nome, qCom: t(x, 'qCom'), tam: tamanho(desc, t(x, 'uCom')), valor_total: t(x, 'vProd'), insumo_id: '', quantidade: t(x, 'qCom') }, sug || '__novo__');
       }),
     });
     ev.target.value = '';
