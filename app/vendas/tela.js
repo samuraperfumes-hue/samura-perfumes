@@ -10,6 +10,7 @@ const saudacao = () => {
   return h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
 };
 const primeiroNome = (nome) => { const t = String(nome || '').trim().split(/\s+/)[0] || ''; return t ? t.charAt(0).toUpperCase() + t.slice(1).toLowerCase() : ''; };
+const textoPosVenda = (nome) => { const pn = primeiroNome(nome); return saudacao() + (pn ? ', ' + pn : '') + '! 😊\n\nMuito obrigado pela sua compra! Queremos saber como está sendo sua experiência com o perfume, seu feedback nos motiva a melhorar sempre. Se precisar de algo, é só chamar.\n\nSamura Perfumes 💛'; };
 const textoCobranca = (nome) => { const pn = primeiroNome(nome); return saudacao() + (pn ? ', ' + pn : '') + '! 😊\n\nEsperamos que esteja aproveitando sua compra! Passando só para confirmar se deu tudo certo e nos colocar à disposição para qualquer dúvida ou novas aquisições.\n\nPara facilitar futuros contatos ou acertos, segue meu número (que também é minha chave Pix): ' + PIX + '.\n\nSe preferir pagar no cartão, é só acessar: ' + LINK + '\n\nConte conosco! 💛'; };
 
 const n = (v) => Number(String(v || '0').replace(',', '.')) || 0;
@@ -235,7 +236,7 @@ export default function Tela({ admin, eu, vendedores }) {
                     <td>{v.codigo}</td><td>{dtBR(v.data_venda)}</td><td>{v.cliente}</td>{admin && <td>{v.vendedor}</td>}
                     <td>{v.itens}</td><td>{brl(v.total_liquido)}</td>
                     <td>{v.situacao}{Number(v.saldo_devedor) > 0 && Number(v.saldo_devedor) < Number(v.total_liquido) ? ' (falta ' + brl(v.saldo_devedor) + ')' : ''}{v.situacao !== 'Paga' && (v.telefone ? <> <a className='bs' href={wa(v.telefone, textoCobranca(v.cliente))} target='_blank' rel='noreferrer'>Cobrança</a></> : <span className='aviso'> (sem WhatsApp)</span>)}</td>
-                    <td>{v.entregue ? 'Entregue' : 'Pendente'}</td>{admin && verCom && <td>{brl(v.comissao_valor)}</td>}
+                    <td>{v.entregue ? 'Entregue' : 'Pendente'}{v.entregue && v.telefone && <> <a className='bs' href={wa(v.telefone, textoPosVenda(v.cliente))} target='_blank' rel='noreferrer'>Pós-venda</a></>}</td>{admin && verCom && <td>{brl(v.comissao_valor)}</td>}
                     <td><button className='bs' onClick={() => setAberta(aberta === v.id ? null : v.id)}>Pagamentos</button></td>
                   </tr>
                   {aberta === v.id && <tr key={'p' + v.id}><td colSpan={colunas}><Pagamentos vendaId={v.id} admin={admin} dataVenda={String(v.data_venda).slice(0, 10)} onChange={carregar} /></td></tr>}
