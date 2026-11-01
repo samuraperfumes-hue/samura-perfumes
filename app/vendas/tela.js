@@ -10,7 +10,7 @@ const saudacao = () => {
   return h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
 };
 const primeiroNome = (nome) => { const t = String(nome || '').trim().split(/\s+/)[0] || ''; return t ? t.charAt(0).toUpperCase() + t.slice(1).toLowerCase() : ''; };
-const textoPosVenda = (nome) => { const pn = primeiroNome(nome); return saudacao() + (pn ? ', ' + pn : '') + '! 😊\n\nMuito obrigado pela sua compra! Queremos saber como está sendo sua experiência com o perfume, seu feedback nos motiva a melhorar sempre. Se precisar de algo, é só chamar.\n\nSamura Perfumes 💛'; };
+const textoPosVenda = (nome) => { const pn = primeiroNome(nome); return saudacao() + (pn ? ', ' + pn : '') + '! 😊\n\nMuito obrigado pela sua compra! Queremos saber como está sendo sua experiência com o perfume, seu feedback nos motiva a melhorar sempre.\n\nSe puder, responda com uma nota de 0 a 10 para o perfume. Sua opinião é muito importante para nós! ⭐\n\nE conheça as nossas outras fragrâncias, com notas, história e melhor uso: https://samura-perfumes.vercel.app/fragrancias\n\nSamura Perfumes 💛'; };
 const textoCobranca = (nome) => { const pn = primeiroNome(nome); return saudacao() + (pn ? ', ' + pn : '') + '! 😊\n\nEsperamos que esteja aproveitando sua compra! Passando só para confirmar se deu tudo certo e nos colocar à disposição para qualquer dúvida ou novas aquisições.\n\nPara facilitar futuros contatos ou acertos, segue meu número (que também é minha chave Pix): ' + PIX + '.\n\nSe preferir pagar no cartão, é só acessar: ' + LINK + '\n\nConte conosco! 💛'; };
 
 const n = (v) => Number(String(v || '0').replace(',', '.')) || 0;
