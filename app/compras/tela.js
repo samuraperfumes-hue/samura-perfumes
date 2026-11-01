@@ -116,6 +116,18 @@ export default function Tela() {
     setRen(null);
     carregar();
   }
+  async function excluirItem(i) {
+    let r = await api('/api/insumos/' + i.id, 'DELETE');
+    if (!r.ok && r.d.compras) {
+      if (!confirm('"' + i.nome + '" tem ' + r.d.compras + ' compra(s) (' + brl(r.d.valor) + '). Excluir o item e essas compras?')) return;
+      r = await api('/api/insumos/' + i.id + '?forcar=1', 'DELETE');
+    } else if (r.ok) {
+      carregar();
+      return;
+    }
+    if (!r.ok) { alert(r.d.erro || 'Erro ao excluir.'); return; }
+    carregar();
+  }
   async function salvarEq(e) {
     e.preventDefault();
     const r = await api('/api/equivalencias', 'POST', ne);
@@ -277,7 +289,7 @@ export default function Tela() {
                   <td>{i.ultima_compra ? dtBR(i.ultima_compra) + ' · ' + custoTxt(i.ultimo_custo, i.unidade) : '-'}</td>
                   <td>{ren && ren.id === i.id
                     ? <><input value={ren.nome} onChange={(e) => setRen({ id: i.id, nome: e.target.value })} /> <button type='button' className='bs' onClick={() => renomear(i)}>Salvar</button> <button type='button' className='bs' onClick={() => setRen(null)}>Cancelar</button></>
-                    : <button type='button' className='bs' onClick={() => setRen({ id: i.id, nome: i.nome })}>Renomear</button>}</td>
+                    : <button type='button' className='bs' onClick={() => setRen({ id: i.id, nome: i.nome })}>Renomear</button>}{' '}<button type='button' className='bs' onClick={() => excluirItem(i)}>Excluir</button></td>
                 </tr>
               ))}
               {d.insumos.length === 0 && <tr><td colSpan={6}>Cadastre os itens que você compra para começar.</td></tr>}

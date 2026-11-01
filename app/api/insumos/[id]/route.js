@@ -35,13 +35,29 @@ export async function PATCH(req, { params }) {
   }
 }
 
-// Exclui um item sem compras.
+// Exclui um item. Se tiver compras, avisa quantas; com ?forcar=1 exclui o item e as compras dele.
 export async function DELETE(req, { params }) {
   const g = await exigir(true);
   if (g.erro) return g.erro;
   const { id } = await params;
-  const tem = (await pool.query('select 1 from compras_insumos where insumo_id = $1 limit 1', [Number(id)])).rows.length;
-  if (tem) return Response.json({ erro: 'Este item tem compras lançadas. Renomeie-o ou exclua as compras antes.' }, { status: 400 });
-  await pool.query('delete from insumos where id = $1', [Number(id)]);
-  return Response.json({ ok: true });
+  const forcar = new URL(req.url).searchParams.get('forcar') === '1';
+  const cx = await pool.connect();
+  try {
+    const cp = (await cx.query('select count(*)::int as n, coalesce(sum(valor_total), 0)::float as v from compras_insumos where insumo_id = $1', [Number(id)])).rows[0];
+    if (cp.n > 0 && !forcar) {
+      return Response.json({ erro: 'Este item tem ' + cp.n + ' compra(s) lan\u00e7ada(s).', compras: cp.n, valor: cp.v }, { status: 409 });
+    }
+    await cx.query('begin');
+    const rec = (await cx.query("select to_regclass('receitas') as t")).rows[0].t;
+    if (rec) await cx.query('delete from receitas where insumo_id = $1', [Number(id)]);
+    await cx.query('delete from compras_insumos where insumo_id = $1', [Number(id)]);
+    await cx.query('delete from insumos where id = $1', [Number(id)]);
+    await cx.query('commit');
+    return Response.json({ ok: true });
+  } catch (e) {
+    await cx.query('rollback');
+    throw e;
+  } finally {
+    cx.release();
+  }
 }
