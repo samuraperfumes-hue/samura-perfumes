@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { api, brl, dtBR, hojeISO, wa } from '../util';
 import Pagamentos from './pagamentos';
 
-const PIX = '21 964147761';
 const LINK = 'https://mpago.li/1o3MyQE';
 const saudacao = () => {
   const h = new Date().getHours();
@@ -11,7 +10,7 @@ const saudacao = () => {
 };
 const primeiroNome = (nome) => { const t = String(nome || '').trim().split(/\s+/)[0] || ''; return t ? t.charAt(0).toUpperCase() + t.slice(1).toLowerCase() : ''; };
 const textoPosVenda = (nome) => { const pn = primeiroNome(nome); return saudacao() + (pn ? ', ' + pn : '') + '! 😊\n\nMuito obrigado pela sua compra! Queremos saber como está sendo sua experiência com o perfume, seu feedback nos motiva a melhorar sempre.\n\nSe puder, responda com uma nota de 0 a 10 para o perfume. Sua opinião é muito importante para nós! ⭐\n\nE conheça as nossas outras fragrâncias, com notas, história e melhor uso: https://samura-perfumes.vercel.app/fragrancias\n\nSamura Perfumes 💛'; };
-const textoCobranca = (nome) => { const pn = primeiroNome(nome); return saudacao() + (pn ? ', ' + pn : '') + '! 😊\n\nEsperamos que esteja aproveitando sua compra! Passando só para confirmar se deu tudo certo e nos colocar à disposição para qualquer dúvida ou novas aquisições.\n\nPara facilitar futuros contatos ou acertos, segue meu número (que também é minha chave Pix): ' + PIX + '.\n\nSe preferir pagar no cartão, é só acessar: ' + LINK + '\n\nConte conosco! 💛'; };
+const textoCobranca = (nome, pix) => { const pn = primeiroNome(nome); return saudacao() + (pn ? ', ' + pn : '') + '! 😊\n\nEsperamos que esteja aproveitando sua compra! Passando só para confirmar se deu tudo certo e nos colocar à disposição para qualquer dúvida ou novas aquisições.\n\nPara facilitar futuros contatos ou acertos, segue minha chave Pix: ' + pix + '.\n\nSe preferir pagar no cartão, é só acessar: ' + LINK + '\n\nConte conosco! 💛'; };
 
 const n = (v) => Number(String(v || '0').replace(',', '.')) || 0;
 const novoItem = () => ({ tipo: 'Perfume', frag: '', volume: '50 ml', qtd: '1', preco: '', manual: false, entrega: '' });
@@ -44,9 +43,11 @@ export default function Tela({ admin, eu, vendedores }) {
   const [agrad, setAgrad] = useState(null);
   const [todas, setTodas] = useState(false);
   const [busca, setBusca] = useState('');
+  const [pix, setPix] = useState('21 964147761');
 
   async function carregar() {
-    const [a, b, c, e] = await Promise.all([api('/api/catalogo', 'GET'), api('/api/clientes', 'GET'), api('/api/vendas', 'GET'), api('/api/estoque', 'GET')]);
+    const [a, b, c, e, cf] = await Promise.all([api('/api/catalogo', 'GET'), api('/api/clientes', 'GET'), api('/api/vendas', 'GET'), api('/api/estoque', 'GET'), api('/api/config', 'GET')]);
+    if (cf.ok && cf.d.pix) setPix(cf.d.pix);
     if (a.ok) setCat(a.d);
     if (b.ok) setClientes(b.d);
     if (c.ok) setVendas(c.d);
@@ -235,7 +236,7 @@ export default function Tela({ admin, eu, vendedores }) {
                   <tr key={v.id}>
                     <td>{v.codigo}</td><td>{dtBR(v.data_venda)}</td><td>{v.cliente}</td>{admin && <td>{v.vendedor}</td>}
                     <td>{v.itens}</td><td>{brl(v.total_liquido)}</td>
-                    <td>{v.situacao}{Number(v.saldo_devedor) > 0 && Number(v.saldo_devedor) < Number(v.total_liquido) ? ' (falta ' + brl(v.saldo_devedor) + ')' : ''}{v.situacao !== 'Paga' && (v.telefone ? <> <a className='bs' href={wa(v.telefone, textoCobranca(v.cliente))} target='_blank' rel='noreferrer'>Cobrança</a></> : <span className='aviso'> (sem WhatsApp)</span>)}</td>
+                    <td>{v.situacao}{Number(v.saldo_devedor) > 0 && Number(v.saldo_devedor) < Number(v.total_liquido) ? ' (falta ' + brl(v.saldo_devedor) + ')' : ''}{v.situacao !== 'Paga' && (v.telefone ? <> <a className='bs' href={wa(v.telefone, textoCobranca(v.cliente, pix))} target='_blank' rel='noreferrer'>Cobrança</a></> : <span className='aviso'> (sem WhatsApp)</span>)}</td>
                     <td>{v.entregue ? 'Entregue' : 'Pendente'}{v.entregue && v.telefone && <> <a className='bs' href={wa(v.telefone, textoPosVenda(v.cliente))} target='_blank' rel='noreferrer'>Pós-venda</a></>}</td>{admin && verCom && <td>{brl(v.comissao_valor)}</td>}
                     <td><button className='bs' onClick={() => setAberta(aberta === v.id ? null : v.id)}>Pagamentos</button></td>
                   </tr>

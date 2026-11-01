@@ -1,6 +1,8 @@
 import './fragrancias.css';
 import { q } from '../../lib/db';
+import { pool } from '../../lib/db';
 import { acharFicha } from '../../lib/fichas';
+import { lerConfigGeral } from '../../lib/config';
 import Lista from './lista';
 
 export const dynamic = 'force-dynamic';
@@ -12,6 +14,7 @@ export const metadata = {
 
 export default async function Pagina() {
   const r = await q("select distinct f.nome from fragrancias f join apresentacoes a on a.fragrancia_id = f.id where a.ativa and a.tipo = 'Perfume' order by f.nome");
+  const cfg = await lerConfigGeral(pool);
   const vistos = new Set();
   const itens = [];
   r.rows.forEach((x) => {
@@ -27,5 +30,5 @@ export default async function Pagina() {
     });
   });
   itens.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
-  return <Lista itens={itens} />;
+  return <Lista itens={itens} zap={cfg.whatsapp} />;
 }

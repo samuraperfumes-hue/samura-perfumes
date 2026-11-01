@@ -1,10 +1,9 @@
 'use client';
 import { useState } from 'react';
 
-const ZAP = '5521964147761';
-const link = (nome) => 'https://wa.me/' + ZAP + '?text=' + encodeURIComponent('Olá! Vi a fragrância ' + nome + ' no catálogo da Samura Perfumes e quero fazer meu pedido.');
+const link = (zap, nome) => 'https://wa.me/' + zap + '?text=' + encodeURIComponent('Olá! Vi a fragrância ' + nome + ' no catálogo da Samura Perfumes e quero fazer meu pedido.');
 
-export default function Lista({ itens }) {
+export default function Lista({ itens, zap }) {
   const [filtro, setFiltro] = useState('Todos');
   const [busca, setBusca] = useState('');
   const [aberto, setAberto] = useState(null);
@@ -57,7 +56,7 @@ export default function Lista({ itens }) {
                     {[...i.momentos, ...i.clima.map((c) => 'Clima ' + c.toLowerCase())].map((m) => <span key={m} className='fr-tag'>{m}</span>)}
                     <br />{i.uso}</p>
                 )}
-                <a className='fr-zap' href={link(i.nome)} target='_blank' rel='noreferrer'>Pedir no WhatsApp</a>
+                <a className='fr-zap' href={link(zap, i.nome)} target='_blank' rel='noreferrer'>Pedir no WhatsApp</a>
               </div>
             )}
           </article>
