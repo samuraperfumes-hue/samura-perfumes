@@ -11,6 +11,7 @@ export default function Tela() {
   const [msg, setMsg] = useState('');
   const [ed, setEd] = useState(null); // { fid, itens: [{insumo_id, pct}] }
   const [cfg, setCfg] = useState(null);
+  const [com, setCom] = useState({ sel: '0', pct: '' });
 
   async function carregar() {
     const r = await api('/api/custos', 'GET');
@@ -35,6 +36,11 @@ export default function Tela() {
 
   if (!d) return <div className='card'><p>{erro || 'Carregando...'}</p></div>;
   const soma = ed ? ed.itens.reduce((t, x) => t + (num(x.ml) || 0), 0) : 0;
+  const vend = d.vendedores || [];
+  const vSel = vend.find((v) => String(v.id) === com.sel);
+  const comTipo = com.sel === 'manual' ? 'percentual' : vSel ? vSel.comissao_tipo : null;
+  const comVal = com.sel === 'manual' ? num(com.pct) || 0 : vSel ? Number(vSel.comissao_valor) : 0;
+  const comissaoDe = (preco) => (comTipo === 'fixo' ? comVal : comTipo ? (preco * comVal) / 100 : 0);
   const mudar = (i, campo, v) => setEd({ ...ed, itens: ed.itens.map((x, k) => (k === i ? { ...x, [campo]: v } : x)) });
 
   return (
@@ -42,6 +48,20 @@ export default function Tela() {
       <h1>Custos e margem</h1>
       {erro && <p className='erro'>{erro}</p>}
       {msg && <p className='ok'>{msg}</p>}
+
+      <div className='card'>
+        <h2>Comissão considerada</h2>
+        <div className='linha'>
+          <div><label>Vendedor</label>
+            <select value={com.sel} onChange={(e) => setCom({ ...com, sel: e.target.value })}>
+              <option value='0'>Sem comissão (venda direta)</option>
+              {vend.map((v) => <option key={v.id} value={v.id}>{v.nome} ({v.comissao_tipo === 'fixo' ? brl(v.comissao_valor) + ' fixo' : pct(v.comissao_valor)})</option>)}
+              <option value='manual'>Outro percentual...</option>
+            </select></div>
+          {com.sel === 'manual' && <div><label>% de comissão</label><input value={com.pct} inputMode='decimal' onChange={(e) => setCom({ ...com, pct: e.target.value })} /></div>}
+        </div>
+        <p className='aviso'>A comissão é calculada sobre o preço de venda e descontada do lucro na tabela abaixo. Para comissão em valor fixo, o valor é por venda e a tabela considera 1 frasco por venda.</p>
+      </div>
 
       <div className='card'>
         <h2>Configuração</h2>
@@ -91,16 +111,21 @@ export default function Tela() {
           {f.apresentacoes.length > 0 && (
             <div className='tabela'>
               <table>
-                <thead><tr><th>Frasco</th><th>Líquido</th><th>Vidro</th><th>Válvula</th><th>Rótulo</th><th>Sacola</th><th>Custo</th><th>Preço</th><th>Lucro</th><th>Margem</th></tr></thead>
+                <thead><tr><th>Frasco</th><th>Líquido</th><th>Vidro</th><th>Válvula</th><th>Rótulo</th><th>Sacola</th><th>Custo</th><th>Preço</th><th>Comissão</th><th>Lucro</th><th>Margem</th></tr></thead>
                 <tbody>
-                  {f.apresentacoes.map((a) => (
+                  {f.apresentacoes.map((a) => {
+                    const c = comissaoDe(a.preco);
+                    const lucro = Math.round((a.lucro - c) * 100) / 100;
+                    const margem = a.preco > 0 ? Math.round((lucro / a.preco) * 10000) / 100 : null;
+                    return (
                     <tr key={a.id}>
                       <td>{a.volume}</td><td>{brl(a.custo.liquido)}</td><td>{brl(a.custo.vidro)}</td><td>{brl(a.custo.valvula)}</td><td>{brl(a.custo.rotulo)}</td><td>{brl(a.custo.sacola)}</td>
-                      <td><b>{brl(a.custo.total)}</b></td><td>{brl(a.preco)}</td>
-                      <td>{a.completo ? <b>{brl(a.lucro)}</b> : <span title={a.falta.join(', ')}>~{brl(a.lucro)}</span>}</td>
-                      <td>{a.margem == null ? '-' : a.margem + '%'}{!a.completo && ' ⚠'}</td>
+                      <td><b>{brl(a.custo.total)}</b></td><td>{brl(a.preco)}</td><td>{brl(c)}</td>
+                      <td>{a.completo ? <b>{brl(lucro)}</b> : <span title={a.falta.join(', ')}>~{brl(lucro)}</span>}</td>
+                      <td>{margem == null ? '-' : margem + '%'}{!a.completo && ' \u26a0'}</td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
               {f.apresentacoes.some((a) => !a.completo) && <p className='aviso'>⚠ Valores aproximados. Falta: {[...new Set(f.apresentacoes.flatMap((a) => a.falta))].join(', ')}.</p>}
