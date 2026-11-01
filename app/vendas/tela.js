@@ -236,8 +236,8 @@ export default function Tela({ admin, eu, vendedores }) {
                   <tr key={v.id}>
                     <td>{v.codigo}</td><td>{dtBR(v.data_venda)}</td><td>{v.cliente}</td>{admin && <td>{v.vendedor}</td>}
                     <td>{v.itens}</td><td>{brl(v.total_liquido)}</td>
-                    <td>{v.situacao}{Number(v.saldo_devedor) > 0 && Number(v.saldo_devedor) < Number(v.total_liquido) ? ' (falta ' + brl(v.saldo_devedor) + ')' : ''}{v.situacao !== 'Paga' && (v.telefone ? <> <a className='bs' href={wa(v.telefone, textoCobranca(v.cliente, pix))} target='_blank' rel='noreferrer'>Cobrança</a></> : <span className='aviso'> (sem WhatsApp)</span>)}</td>
-                    <td>{v.entregue ? 'Entregue' : 'Pendente'}{v.entregue && v.telefone && <> <a className='bs' href={wa(v.telefone, textoPosVenda(v.cliente))} target='_blank' rel='noreferrer'>Pós-venda</a></>}</td>{admin && verCom && <td>{brl(v.comissao_valor)}</td>}
+                    <td>{v.situacao}{Number(v.saldo_devedor) > 0 && Number(v.saldo_devedor) < Number(v.total_liquido) ? ' (falta ' + brl(v.saldo_devedor) + ')' : ''}{v.situacao !== 'Paga' && (v.telefone ? <div style={{ marginTop: 6 }}><a className='bs' style={{ display: 'inline-block', whiteSpace: 'nowrap' }} href={wa(v.telefone, textoCobranca(v.cliente, pix))} target='_blank' rel='noreferrer'>Cobrança</a></div> : <span className='aviso'> (sem WhatsApp)</span>)}</td>
+                    <td>{v.entregue ? 'Entregue' : 'Pendente'}{v.entregue && v.telefone && <div style={{ marginTop: 6 }}><a className='bs' style={{ display: 'inline-block', whiteSpace: 'nowrap' }} href={wa(v.telefone, textoPosVenda(v.cliente))} target='_blank' rel='noreferrer'>Pós-venda</a></div>}</td>{admin && verCom && <td>{brl(v.comissao_valor)}</td>}
                     <td><button className='bs' onClick={() => setAberta(aberta === v.id ? null : v.id)}>Pagamentos</button></td>
                   </tr>
                   {aberta === v.id && <tr key={'p' + v.id}><td colSpan={colunas}><Pagamentos vendaId={v.id} admin={admin} dataVenda={String(v.data_venda).slice(0, 10)} onChange={carregar} /></td></tr>}
