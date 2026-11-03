@@ -6,9 +6,10 @@ const link = (zap, nome) => 'https://wa.me/' + zap + '?text=' + encodeURICompone
 function Frasco({ nome, mini }) {
   if (mini) return <span className='fr-mini' aria-hidden='true' />;
   return (
-    <div className='fr-foto' role='img' aria-label={'Frasco Samura Perfumes ' + nome}>
-      <span style={{ fontSize: Math.min(4.4, 62 / Math.max(nome.length, 1)) + 'cqw' }}>{nome}</span>
-    </div>
+    <figure className='fr-foto-box'>
+      <div className='fr-foto' role='img' aria-label={'Frasco Samura Perfumes ' + nome} />
+      <figcaption>{nome}</figcaption>
+    </figure>
   );
 }
 
