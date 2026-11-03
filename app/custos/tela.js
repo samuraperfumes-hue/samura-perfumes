@@ -47,7 +47,7 @@ export default function Tela() {
             <div key={v.ml} className='card' style={{ flex: 1, minWidth: 180, margin: 0 }}>
               <h3 style={{ margin: '0 0 8px' }}>{v.ml} ml</h3>
               <p style={{ margin: '2px 0' }}>Preço de venda: <b>{brl(v.preco)}</b>{v.preco_min !== v.preco_max ? ' (varia de ' + brl(v.preco_min) + ' a ' + brl(v.preco_max) + ')' : ''}</p>
-              <p style={{ margin: '2px 0' }}>Custo do frasco: <b>{brl(v.custo)}</b></p>
+              <p style={{ margin: '2px 0' }}>Custo total (perfume pronto): <b>{brl(v.custo)}</b></p>
               <p style={{ margin: '2px 0' }}>Comissão: <b>{brl(v.comissao)}</b></p>
               <p style={{ margin: '8px 0 2px', fontSize: '1.15em' }}>Lucro: <b>{brl(v.lucro)}</b></p>
               <p style={{ margin: '2px 0' }}>Margem: <b>{v.margem == null ? '-' : pct(v.margem)}</b></p>
