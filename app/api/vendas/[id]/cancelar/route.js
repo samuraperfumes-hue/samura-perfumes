@@ -2,6 +2,7 @@ import { pool } from '../../../../../lib/db';
 import { exigir } from '../../../../../lib/guard';
 import { garantir } from '../../../../../lib/estoque';
 import { garantirClientes } from '../../../../../lib/clientes';
+import { garantirEstornos } from '../../../../../lib/comissoes';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,8 +15,9 @@ export async function POST(req, { params }) {
   try {
     await garantir(cx);
     await garantirClientes(cx);
+    await garantirEstornos(cx);
     await cx.query('begin');
-    const v = (await cx.query('select id, cancelada from vendas where id = $1 for update', [Number(id)])).rows[0];
+    const v = (await cx.query('select id, cancelada, vendedor_id from vendas where id = $1 for update', [Number(id)])).rows[0];
     if (!v) throw new Error('Venda não encontrada.');
     if (v.cancelada) throw new Error('Esta venda já está cancelada.');
     const rec = (await cx.query(`select count(*)::int as n from pagamentos where venda_id = $1 and situacao = 'recebido'`, [v.id])).rows[0].n;
@@ -25,6 +27,7 @@ export async function POST(req, { params }) {
     await cx.query(`update vendas set cancelada = true, observacoes = coalesce(observacoes || ' | ', '') || 'CANCELADA: ' || $2::text where id = $1`, [v.id, motivo]);
     await cx.query(`insert into movimentos_estoque (local_id, apresentacao_id, quantidade, tipo, venda_item_id, obs, criado_por) select m.local_id, m.apresentacao_id, -m.quantidade, 'cancelamento', m.venda_item_id, 'Venda cancelada', $2 from movimentos_estoque m join venda_itens i on i.id = m.venda_item_id where i.venda_id = $1 and m.tipo = 'venda'`, [v.id, g.s.id]);
     await cx.query('update creditos set usado_venda_id = null, usado_em = null where usado_venda_id = $1', [v.id]);
+    if (paga > 0) await cx.query('insert into estornos_comissao (venda_id, vendedor_id, valor) values ($1, $2, $3) on conflict (venda_id) do nothing', [v.id, v.vendedor_id, paga]);
     await cx.query('commit');
     return Response.json({ ok: true, comissaoPaga: paga });
   } catch (e) {

@@ -40,6 +40,12 @@ export default function Tela() {
         {msg && <p className='ok'>{msg}</p>}
         <button className='btn'>Salvar</button>
       </form>
+      <div className='card'>
+        <h2>Cópia de segurança</h2>
+        <p>Baixa um arquivo com todos os dados do sistema: vendas, clientes, estoque, pagamentos, comissões e catálogo.</p>
+        <p><a className='btn' style={{ display: 'inline-block', textDecoration: 'none' }} href='/api/backup'>Baixar backup</a></p>
+        <p className='aviso'>Faça uma vez por semana e guarde o arquivo no Google Drive ou no e-mail. Ele tem os dados e telefones dos clientes, então não compartilhe.</p>
+      </div>
     </>
   );
 }

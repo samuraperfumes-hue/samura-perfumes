@@ -59,7 +59,7 @@ export default function Pagamentos({ vendaId, admin, onChange, dataVenda }) {
     if (!await confirmar('Cancelar esta venda? Ela sairá das listas, da agenda, das comissões e das entregas.')) return;
     const r = await api('/api/vendas/' + vendaId + '/cancelar', 'POST', { motivo: m });
     if (!r.ok) { avisar(r.d.erro || 'Erro'); return; }
-    if (Number(r.d.comissaoPaga) > 0) avisar('Atenção: a comissão desta venda já tinha sido paga (' + brl(r.d.comissaoPaga) + '). Desconte esse valor no próximo acerto do vendedor.');
+    if (Number(r.d.comissaoPaga) > 0) avisar('A comissão desta venda já tinha sido paga (' + brl(r.d.comissaoPaga) + '). Esse valor será descontado automaticamente no próximo acerto do vendedor.', { titulo: 'Comissão a devolver' });
     onChange();
   }
   async function excluirVenda() {

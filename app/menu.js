@@ -21,10 +21,11 @@ export default function Menu({ s }) {
         {s.papel === 'admin' && <Link href='/vendedores'>Vendedores</Link>}
         <Link href='/catalogo'>Catálogo</Link>
         <Link href='/clientes'>Clientes</Link>
+        <a href='/fragrancias' target='_blank' rel='noreferrer'>Fragrâncias</a>
         {s.papel === 'admin' && <Link href='/importar'>Importar</Link>}
         {s.papel === 'admin' && <Link href='/configuracoes'>Configurações</Link>}
       </nav>
-      <div className='quem'><Alertas /><span>{s.nome}</span><Sair /></div>
+      <div className='quem'><Alertas /><span>{s.nome}</span><Link href='/senha' title='Trocar minha senha'>🔑</Link><Sair /></div>
       <Dialogos />
     </header>
   );

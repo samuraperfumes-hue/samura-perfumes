@@ -6,10 +6,14 @@ import { lerConfigGeral } from '../../lib/config';
 import Lista from './lista';
 
 export const dynamic = 'force-dynamic';
+const DESC = 'Conheça as fragrâncias da Samura Perfumes: notas olfativas, história e melhor uso. Peça a sua pelo WhatsApp.';
 export const metadata = {
+  metadataBase: new URL('https://samura-perfumes.vercel.app'),
   title: 'Fragrâncias | Samura Perfumes',
-  description: 'Conheça as fragrâncias da Samura Perfumes: notas olfativas, história e melhor uso.',
+  description: DESC,
   robots: { index: true, follow: true },
+  openGraph: { title: 'Nossas fragrâncias | Samura Perfumes', description: DESC, url: '/fragrancias', siteName: 'Samura Perfumes', locale: 'pt_BR', type: 'website' },
+  twitter: { card: 'summary_large_image', title: 'Nossas fragrâncias | Samura Perfumes', description: DESC },
 };
 
 export default async function Pagina() {

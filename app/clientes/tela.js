@@ -36,6 +36,7 @@ export default function Tela({ admin, eu, vendedores }) {
   const [minDias, setMinDias] = useState('0');
   const [mostrar, setMostrar] = useState('todos');
   const [agenda, setAgenda] = useState(false);
+  const [juntarCom, setJuntarCom] = useState('');
 
   async function recarregar() {
     const r = await api('/api/clientes', 'GET');
@@ -89,6 +90,18 @@ export default function Tela({ admin, eu, vendedores }) {
     if (!r.ok) { setErro(r.d.erro || 'Erro ao excluir.'); return; }
     recarregar();
   }
+  async function juntar() {
+    const o = lista.find((c) => c.id === edit);
+    const d = lista.find((c) => String(c.id) === juntarCom);
+    if (!o || !d) return;
+    const txt = 'O cadastro "' + o.nome + '" vai ser juntado em "' + d.nome + '" (' + (d.telefone || 'sem WhatsApp') + ').\n\nAs vendas, descontos e mensagens de "' + o.nome + '" passam para "' + d.nome + '", e o cadastro "' + o.nome + '" é apagado. Isso não pode ser desfeito.';
+    if (!(await confirmar(txt, { titulo: 'Juntar clientes', ok: 'Juntar', perigo: true }))) return;
+    const r = await api('/api/clientes/' + o.id + '/juntar', 'POST', { destino_id: d.id });
+    if (!r.ok) { setErro(r.d.erro || 'Erro ao juntar.'); return; }
+    setEdit(null); setF(vazio); setJuntarCom(''); setErro('');
+    setOk('Cadastros juntados em ' + d.nome + '.');
+    recarregar();
+  }
   function enviado(c, tipo) {
     registrar(c.id, tipo).then(() => setTimeout(recarregar, 300));
   }
@@ -140,8 +153,23 @@ export default function Tela({ admin, eu, vendedores }) {
         <p>
           <button type='button' className='btn' onClick={() => salvar(false)}>{edit ? 'Salvar alterações' : 'Cadastrar cliente'}</button>
           {dup && <button type='button' className='bs' onClick={() => salvar(true)}>Cadastrar mesmo assim</button>}
-          {edit && <button type='button' className='bs' onClick={() => { setEdit(null); setF(vazio); setErro(''); setDup(false); }}>Cancelar</button>}
+          {edit && <button type='button' className='bs' onClick={() => { setEdit(null); setF(vazio); setErro(''); setDup(false); setJuntarCom(''); }}>Cancelar</button>}
         </p>
+        {edit && admin && (
+          <div style={{ borderTop: '1px solid #332A15', marginTop: 12, paddingTop: 12 }}>
+            <label>Cadastro repetido? Juntar este cliente com</label>
+            <div className='linha'>
+              <div style={{ flex: 3 }}>
+                <select value={juntarCom} onChange={(e) => setJuntarCom(e.target.value)}>
+                  <option value=''>Escolha o cadastro que vai ficar</option>
+                  {lista.filter((c) => c.id !== edit).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')).map((c) => <option key={c.id} value={c.id}>{c.nome}{c.telefone ? ' · ' + c.telefone : ''}{c.compras ? ' · ' + c.compras + ' compra(s)' : ''}</option>)}
+                </select>
+              </div>
+              <div><button type='button' className='bs' disabled={!juntarCom} onClick={juntar}>Juntar</button></div>
+            </div>
+            <p className='aviso'>As vendas e descontos deste cadastro passam para o escolhido, e este é apagado.</p>
+          </div>
+        )}
       </div>
       <div className='card'>
         <h2>Clientes ({vis.length})</h2>

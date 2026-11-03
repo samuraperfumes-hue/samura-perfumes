@@ -3,11 +3,12 @@ import { useEffect, useRef, useState } from 'react';
 
 // Caixas de diálogo no visual do sistema (substituem alert/confirm/prompt do navegador).
 let abrir = null;
+let alertaNativo = null;
 
 function pedir(item) {
   return new Promise((resolve) => {
     if (abrir) { abrir({ ...item, resolve }); return; }
-    if (item.tipo === 'aviso') { window.alert(item.msg); resolve(true); }
+    if (item.tipo === 'aviso') { (alertaNativo || window.alert).call(window, item.msg); resolve(true); }
     else if (item.tipo === 'confirma') resolve(window.confirm(item.msg));
     else resolve(window.prompt(item.msg, item.inicial));
   });
@@ -27,7 +28,10 @@ export default function Dialogos() {
 
   useEffect(() => {
     abrir = (item) => setFila((f) => [...f, item]);
-    return () => { abrir = null; };
+    // Telas que ainda usam o alert() do navegador passam a mostrar o aviso no visual do sistema.
+    alertaNativo = window.alert;
+    window.alert = (m) => { avisar(m); };
+    return () => { abrir = null; if (alertaNativo) window.alert = alertaNativo; alertaNativo = null; };
   }, []);
   useEffect(() => {
     if (!atual) return;
