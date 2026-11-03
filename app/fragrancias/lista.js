@@ -3,6 +3,15 @@ import { useState } from 'react';
 
 const link = (zap, nome) => 'https://wa.me/' + zap + '?text=' + encodeURIComponent('Olá! Vi a fragrância ' + nome + ' no catálogo da Samura Perfumes e quero fazer meu pedido.');
 
+function Frasco({ nome, mini }) {
+  if (mini) return <span className='fr-mini' aria-hidden='true' />;
+  return (
+    <div className='fr-foto' role='img' aria-label={'Frasco Samura Perfumes ' + nome}>
+      <span style={{ fontSize: Math.min(4.4, 62 / Math.max(nome.length, 1)) + 'cqw' }}>{nome}</span>
+    </div>
+  );
+}
+
 function Indicar() {
   const vazio = { quem: '', quem_tel: '', nome: '', telefone: '', aviso: false, site: '' };
   const [f, setF] = useState(vazio);
@@ -72,7 +81,8 @@ export default function Lista({ itens, zap }) {
         return (
           <article key={i.nome} className={'fr-card' + (on ? ' on' : '')}>
             <button type='button' className='fr-cab' onClick={() => setAberto(on ? null : i.nome)} aria-expanded={on}>
-              <span>
+              <Frasco mini />
+              <span className='fr-tit'>
                 <b>{i.nome}</b>
                 <small>{[i.genero, i.linha === 'Árabe' ? 'Árabe' : '', i.casa].filter(Boolean).join(' · ')}</small>
               </span>
@@ -80,6 +90,7 @@ export default function Lista({ itens, zap }) {
             </button>
             {on && (
               <div className='fr-corpo'>
+                <Frasco nome={i.nome} />
                 {i.familia && <p><span className='fr-rot'>Família olfativa</span>{i.familia}</p>}
                 {i.inspiracao && <p><span className='fr-rot'>Também lembra</span>{i.inspiracao}</p>}
                 {(i.topo || i.coracao || i.fundo) ? (
