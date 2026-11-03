@@ -23,7 +23,7 @@ function Indicar() {
   return (
     <form className='fr-indica' onSubmit={enviar}>
       <h2>Conhece alguém que vai amar?</h2>
-      <p>Indique um amigo e a gente apresenta nossas fragrâncias para ele. Quando ele fizer a primeira compra, você ganha desconto na sua próxima.</p>
+      <p>Indique um amigo e a gente apresenta nossas fragrâncias para ele. Quando ele fizer a primeira compra, <b>você ganha 10% de desconto</b> na sua próxima, e <b>ele ganha 5%</b> na primeira compra dele. 🎁</p>
       <label>Seu nome</label>
       <input value={f.quem} onChange={(e) => set('quem', e.target.value)} maxLength={80} />
       <label>Seu WhatsApp (com DDD)</label>
@@ -36,6 +36,7 @@ function Indicar() {
       <label className='fr-check'><input type='checkbox' checked={f.aviso} onChange={(e) => set('aviso', e.target.checked)} /> Avisei meu amigo que a Samura Perfumes vai entrar em contato.</label>
       {erro && <p className='fr-erro'>{erro}</p>}
       {msg && <p className='fr-ok'>{msg}</p>}
+      <p className='fr-regra'>O desconto de quem indica vale por 90 dias após a compra do amigo e não acumula com outras promoções.</p>
       <button className='fr-zap' disabled={env}>{env ? 'Enviando...' : 'Indicar amigo'}</button>
     </form>
   );

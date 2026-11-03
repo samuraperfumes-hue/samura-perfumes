@@ -20,7 +20,7 @@ const primeiroNome = (nome) => { const t = String(nome || '').trim().split(/\s+/
 const ola = (nome) => { const pn = primeiroNome(nome); return saudacao() + (pn ? ', ' + pn : '') + '! 😊\n\n'; };
 const textoResgate = (nome) => ola(nome) + 'Quanto tempo! Aqui é da Samura Perfumes. Passando para saber como está o seu perfume: você ficou satisfeito? Como está a fixação e o desempenho dele? Seu retorno nos motiva muito a melhorar sempre.\n\nAproveitando, temos fragrâncias que talvez você ainda não conheça, com notas, história e melhor uso: ' + LINK_FRAG + '\n\nSe algum aroma chamar a sua atenção, é só me responder por aqui que eu separo o seu. Será um prazer ter você de volta! 💛\n\nSamura Perfumes';
 const textoConvite = (nome, indicou) => ola(nome)
-  + (indicou ? 'Aqui é da Samura Perfumes. ' + primeiroNome(indicou) + ' indicou você e achamos que você ia gostar de conhecer nossas fragrâncias, inspiradas nos grandes perfumes.' : 'Aqui é da Samura Perfumes! Queremos te apresentar nossas fragrâncias, inspiradas nos grandes perfumes.')
+  + (indicou ? 'Aqui é da Samura Perfumes. ' + primeiroNome(indicou) + ' indicou você e achamos que você ia gostar de conhecer nossas fragrâncias, inspiradas nos grandes perfumes. E por ter vindo por indicação, você ganha 5% de desconto na sua primeira compra! 🎁' : 'Aqui é da Samura Perfumes! Queremos te apresentar nossas fragrâncias, inspiradas nos grandes perfumes.')
   + '\n\nMontamos uma página com cada uma delas, com notas, história e o melhor momento de usar: ' + LINK_FRAG
   + '\n\nSe algum aroma chamar a sua atenção, é só me responder por aqui que eu te ajudo a escolher. 💛\n\nSe preferir não receber nossas mensagens, é só avisar.\n\nSamura Perfumes';
 const linkZap = (tel, texto) => {

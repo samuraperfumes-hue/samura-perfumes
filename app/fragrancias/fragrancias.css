@@ -33,3 +33,4 @@
 .fr-oculto { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
 .fr-erro { color: #ff8080 !important; }
 .fr-ok { color: #7ddc8a !important; }
+.fr-indica .fr-regra { font-size: 11px; color: #c5a059; margin: 0 0 10px; }
