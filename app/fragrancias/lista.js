@@ -21,7 +21,7 @@ function Indicar() {
     setMsg('Obrigado pela indicação! Vamos entrar em contato com o seu amigo. 💛');
   }
   return (
-    <form className='fr-indica' onSubmit={enviar}>
+    <form id='indique' className='fr-indica' onSubmit={enviar}>
       <h2>Conhece alguém que vai amar?</h2>
       <p>Indique um amigo e a gente apresenta nossas fragrâncias para ele. Quando ele fizer a primeira compra, <b>você ganha 10% de desconto</b> na sua próxima, e <b>ele ganha 5%</b> na primeira compra dele. 🎁</p>
       <label>Seu nome</label>

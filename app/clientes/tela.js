@@ -23,6 +23,12 @@ const textoConvite = (nome, indicou) => ola(nome)
   + (indicou ? 'Aqui é da Samura Perfumes. ' + primeiroNome(indicou) + ' indicou você e achamos que você ia gostar de conhecer nossas fragrâncias, inspiradas nos grandes perfumes. E por ter vindo por indicação, você ganha 5% de desconto na sua primeira compra! 🎁' : 'Aqui é da Samura Perfumes! Queremos te apresentar nossas fragrâncias, inspiradas nos grandes perfumes.')
   + '\n\nMontamos uma página com cada uma delas, com notas, história e o melhor momento de usar: ' + LINK_FRAG
   + '\n\nSe algum aroma chamar a sua atenção, é só me responder por aqui que eu te ajudo a escolher. 💛\n\nSe preferir não receber nossas mensagens, é só avisar.\n\nSamura Perfumes';
+const textoIndique = (nome) => (nome ? ola(nome) : 'Oi! 😊\n\n')
+  + 'Conhece alguém que vai amar nossos perfumes? Indique um amigo para a Samura Perfumes e ganhe! 🎁\n\n'
+  + '✅ Você ganha 10% de desconto na sua próxima compra\n✅ Seu amigo ganha 5% na primeira compra dele\n\n'
+  + 'É só cadastrar o nome e o WhatsApp dele aqui: ' + LINK_FRAG + '#indique\n\n'
+  + 'O desconto vale depois que o seu amigo fizer a primeira compra, por 90 dias, e não acumula com outras promoções.\n\n'
+  + 'Obrigado por fazer parte da Samura! 💛';
 const linkZap = (tel, texto) => {
   const d = String(tel || '').replace(/[^0-9]/g, '');
   if (!d) return null;
@@ -156,6 +162,7 @@ export default function Tela({ admin, eu, vendedores }) {
       </div>
       <div className='card'>
         <h2>Clientes ({vis.length})</h2>
+        <p><a className='bs' style={{ display: 'inline-block', whiteSpace: 'nowrap' }} href={'https://wa.me/?text=' + encodeURIComponent(textoIndique(''))} target='_blank' rel='noreferrer'>🎁 Compartilhar Indique e ganhe</a> <span className='aviso'>Abre o WhatsApp para enviar a qualquer contato, grupo ou status.</span></p>
         {aguardando > 0 && <p className='ok'>💛 {aguardando} indicação(ões) nova(s) aguardando convite. <button type='button' className='bs' onClick={() => setMostrar('indicacoes')}>Ver</button></p>}
         <div className='linha'>
           <div style={{ flex: 2 }}><label>Buscar</label><input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder='Nome ou telefone...' /></div>
@@ -200,6 +207,7 @@ export default function Tela({ admin, eu, vendedores }) {
                     <td>{c.compras}</td>
                     <td>
                       {zap && <div><a className='bs' style={botao} href={zap} target='_blank' rel='noreferrer' onClick={potencial ? () => marcarConvite(c) : undefined}>{potencial ? 'Convite' : 'Resgate'}</a></div>}
+                      {!potencial && c.telefone && <div style={{ marginTop: 6 }}><a className='bs' style={botao} href={linkZap(c.telefone, textoIndique(c.nome))} target='_blank' rel='noreferrer'>Indique e ganhe</a></div>}
                       <div style={{ marginTop: zap ? 6 : 0 }}><button type='button' className='bs' onClick={() => editar(c)}>Editar</button></div>
                       {potencial && <div style={{ marginTop: 6 }}><button type='button' className='bs' style={{ borderColor: '#d4707f', color: '#d4707f' }} onClick={() => excluir(c)}>Excluir</button></div>}
                     </td>
