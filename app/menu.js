@@ -1,6 +1,8 @@
 import './estilos2.css';
 import Link from 'next/link';
 import Sair from './painel/sair';
+import Alertas from './alertas';
+import Dialogos from './dialogo';
 
 export default function Menu({ s }) {
   return (
@@ -22,7 +24,8 @@ export default function Menu({ s }) {
         {s.papel === 'admin' && <Link href='/importar'>Importar</Link>}
         {s.papel === 'admin' && <Link href='/configuracoes'>Configurações</Link>}
       </nav>
-      <div className='quem'><span>{s.nome}</span><Sair /></div>
+      <div className='quem'><Alertas /><span>{s.nome}</span><Sair /></div>
+      <Dialogos />
     </header>
   );
 }

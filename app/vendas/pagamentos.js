@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { api, brl, dtBR, lerData, hojeISO } from '../util';
+import { avisar, confirmar, perguntar } from '../dialogo';
 
 const rotulo = { agendado: 'Agendado', informado: 'Informado (aguardando repasse)', recebido: 'Recebido' };
 
@@ -20,27 +21,27 @@ export default function Pagamentos({ vendaId, admin, onChange, dataVenda }) {
   useEffect(() => { carregar(); }, []);
   async function acao(id, corpo) {
     const r = await api('/api/pagamentos/' + id, 'PATCH', corpo);
-    if (!r.ok) alert(r.d.erro || 'Erro');
+    if (!r.ok) avisar(r.d.erro || 'Erro');
     carregar(); onChange();
   }
-  function receber(p) {
-    const v = prompt('Valor recebido (R$):', String(p.valor));
+  async function receber(p) {
+    const v = await perguntar('Valor recebido (R$):', String(p.valor));
     if (!v) return;
-    const dt = lerData(prompt('Data do recebimento (dd/mm/aaaa):', dtBR(p.data_recebimento || hojeISO()))) || hojeISO();
+    const dt = lerData(await perguntar('Data do recebimento (dd/mm/aaaa):', dtBR(p.data_recebimento || hojeISO()))) || hojeISO();
     acao(p.id, { acao: 'receber', valor: v, data: dt });
   }
-  function informar(p) {
-    const dt = lerData(prompt('Data em que o cliente pagou (dd/mm/aaaa):', dtBR(hojeISO()))) || hojeISO();
-    const v = prompt('Valor pago pelo cliente (R$):', String(p.valor));
+  async function informar(p) {
+    const dt = lerData(await perguntar('Data em que o cliente pagou (dd/mm/aaaa):', dtBR(hojeISO()))) || hojeISO();
+    const v = await perguntar('Valor pago pelo cliente (R$):', String(p.valor));
     if (!v) return;
     acao(p.id, { acao: 'informar', valor: v, data: dt });
   }
-  function reagendar(p) {
-    const dt = lerData(prompt('Nova data prevista (dd/mm/aaaa):', dtBR(p.data_prevista)));
+  async function reagendar(p) {
+    const dt = lerData(await perguntar('Nova data prevista (dd/mm/aaaa):', dtBR(p.data_prevista)));
     if (dt) acao(p.id, { acao: 'reagendar', data: dt });
   }
-  function contestar(p) {
-    const m = prompt('Motivo (o vendedor verá):');
+  async function contestar(p) {
+    const m = await perguntar('Motivo (o vendedor verá):');
     if (m !== null) acao(p.id, { acao: 'contestar', motivo: m });
   }
   async function salvarData(valor) {
@@ -53,18 +54,18 @@ export default function Pagamentos({ vendaId, admin, onChange, dataVenda }) {
     onChange();
   }
   async function cancelarVenda() {
-    const m = prompt('Motivo do cancelamento da venda:');
+    const m = await perguntar('Motivo do cancelamento da venda:');
     if (m === null) return;
-    if (!confirm('Cancelar esta venda? Ela sairá das listas, da agenda, das comissões e das entregas.')) return;
+    if (!await confirmar('Cancelar esta venda? Ela sairá das listas, da agenda, das comissões e das entregas.')) return;
     const r = await api('/api/vendas/' + vendaId + '/cancelar', 'POST', { motivo: m });
-    if (!r.ok) { alert(r.d.erro || 'Erro'); return; }
-    if (Number(r.d.comissaoPaga) > 0) alert('Atenção: a comissão desta venda já tinha sido paga (' + brl(r.d.comissaoPaga) + '). Desconte esse valor no próximo acerto do vendedor.');
+    if (!r.ok) { avisar(r.d.erro || 'Erro'); return; }
+    if (Number(r.d.comissaoPaga) > 0) avisar('Atenção: a comissão desta venda já tinha sido paga (' + brl(r.d.comissaoPaga) + '). Desconte esse valor no próximo acerto do vendedor.');
     onChange();
   }
   async function excluirVenda() {
-    if (!confirm('Excluir DEFINITIVAMENTE esta venda? Isso apaga a venda, os itens e os pagamentos e não pode ser desfeito.')) return;
+    if (!await confirmar('Excluir DEFINITIVAMENTE esta venda? Isso apaga a venda, os itens e os pagamentos e não pode ser desfeito.')) return;
     const r = await api('/api/vendas/' + vendaId, 'DELETE');
-    if (!r.ok) { alert(r.d.erro || 'Erro'); return; }
+    if (!r.ok) { avisar(r.d.erro || 'Erro'); return; }
     onChange();
   }
   async function criar(corpo) {
@@ -104,8 +105,8 @@ export default function Pagamentos({ vendaId, admin, onChange, dataVenda }) {
                   {p.situacao === 'agendado' && (admin ? <button className='bs' onClick={() => receber(p)}>Receber</button> : <button className='bs' onClick={() => informar(p)}>Cliente pagou</button>)}
                   {p.situacao === 'informado' && admin && <><button className='bs' onClick={() => receber(p)}>Validar</button><button className='bs' onClick={() => contestar(p)}>Contestar</button></>}
                   {p.situacao !== 'recebido' && <button className='bs' onClick={() => reagendar(p)}>Reagendar</button>}
-                  {p.situacao === 'recebido' && admin && <button className='bs' onClick={() => { if (confirm('Estornar este recebimento?')) acao(p.id, { acao: 'estornar' }); }}>Estornar</button>}
-                  {p.situacao === 'agendado' && admin && <button className='bs' onClick={() => { if (confirm('Excluir esta parcela?')) acao(p.id, { acao: 'excluir' }); }}>Excluir</button>}
+                  {p.situacao === 'recebido' && admin && <button className='bs' onClick={async () => { if (await confirmar('Estornar este recebimento?')) acao(p.id, { acao: 'estornar' }); }}>Estornar</button>}
+                  {p.situacao === 'agendado' && admin && <button className='bs' onClick={async () => { if (await confirmar('Excluir esta parcela?')) acao(p.id, { acao: 'excluir' }); }}>Excluir</button>}
                 </td>
               </tr>
             ))}

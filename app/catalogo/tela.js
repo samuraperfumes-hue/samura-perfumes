@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { api } from '../util';
+import { avisar, confirmar, perguntar } from '../dialogo';
 
 const brl = (v) => 'R$ ' + Number(v).toFixed(2).replace('.', ',');
 const chave = (a) => (a.fragrancia + '|' + a.tipo + '|' + a.volume).toLowerCase().replace(/[^a-z0-9|]/g, '');
@@ -41,20 +42,20 @@ export default function Tela({ admin }) {
     setTexto('');
   }
   async function preco(a) {
-    const p = prompt('Novo preço de ' + a.fragrancia + ' ' + a.volume + ':', String(a.preco));
+    const p = await perguntar('Novo preço de ' + a.fragrancia + ' ' + a.volume + ':', String(a.preco));
     if (!p) return;
     const r = await api('/api/catalogo/' + a.id, 'PATCH', { preco: p });
-    if (!r.ok) alert(r.d.erro);
+    if (!r.ok) avisar(r.d.erro);
     recarregar();
   }
   async function editar(a) {
-    const fr = prompt('Fragrância:', a.fragrancia);
+    const fr = await perguntar('Fragrância:', a.fragrancia);
     if (fr === null) return;
-    const ti = prompt('Tipo (ex.: Perfume, Sabonete, Pós Barba):', a.tipo);
+    const ti = await perguntar('Tipo (ex.: Perfume, Sabonete, Pós Barba):', a.tipo);
     if (ti === null) return;
-    const vo = prompt('Volume (ex.: 50 ml):', a.volume);
+    const vo = await perguntar('Volume (ex.: 50 ml):', a.volume);
     if (vo === null) return;
-    const pr = prompt('Preço:', String(a.preco));
+    const pr = await perguntar('Preço:', String(a.preco));
     if (pr === null) return;
     const r = await api('/api/catalogo/' + a.id, 'PATCH', { fragrancia: fr, tipo: ti, volume: vo, preco: pr });
     setMsg(r.ok ? 'Produto atualizado.' : r.d.erro || 'Erro');
@@ -65,7 +66,7 @@ export default function Tela({ admin }) {
     recarregar();
   }
   async function excluir(a) {
-    if (!confirm('Excluir ' + a.tipo + ' ' + a.fragrancia + ' ' + a.volume + '? Se já foi usado em vendas ou estoque, ele será apenas desativado.')) return;
+    if (!await confirmar('Excluir ' + a.tipo + ' ' + a.fragrancia + ' ' + a.volume + '? Se já foi usado em vendas ou estoque, ele será apenas desativado.')) return;
     const r = await api('/api/catalogo/' + a.id, 'DELETE');
     setMsg(r.ok ? (r.d.resultado === 'excluido' ? 'Produto excluído.' : 'Produto já usado em vendas ou estoque: foi desativado.') : r.d.erro || 'Erro');
     recarregar();
@@ -73,7 +74,7 @@ export default function Tela({ admin }) {
   async function excluirSel() {
     const ids = Object.keys(sel).filter((k) => sel[k]).map(Number);
     if (!ids.length) return;
-    if (!confirm('Excluir ' + ids.length + ' produto(s) selecionado(s)? Os que já foram usados em vendas ou estoque serão apenas desativados.')) return;
+    if (!await confirmar('Excluir ' + ids.length + ' produto(s) selecionado(s)? Os que já foram usados em vendas ou estoque serão apenas desativados.')) return;
     const r = await api('/api/catalogo', 'POST', { acao: 'excluir', ids });
     setMsg(r.ok ? r.d.excluidos + ' excluído(s); ' + r.d.desativados + ' desativado(s) por já terem sido usados.' : r.d.erro || 'Erro');
     setSel({});

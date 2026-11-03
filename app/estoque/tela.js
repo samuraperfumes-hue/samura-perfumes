@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { api, dtBR } from '../util';
+import { avisar, perguntar } from '../dialogo';
 
 const rot = { envase: 'Envase', transferencia: 'Transferência', devolucao: 'Devolução', ajuste: 'Ajuste', venda: 'Venda', cancelamento: 'Cancelamento' };
 const nomeProd = (a) => a.fragrancia + ' · ' + a.tipo + ' ' + a.volume;
@@ -33,14 +34,14 @@ export default function Tela({ admin, eu, vendedores }) {
   }
   async function ajustar(s, delta) {
     const r = await api('/api/estoque', 'POST', { acao: 'ajuste', apresentacao_id: s.apresentacao_id, local_id: s.local_id, quantidade: delta, obs: 'Ajuste rápido' });
-    if (!r.ok) { alert(r.d.erro || 'Erro'); return; }
+    if (!r.ok) { avisar(r.d.erro || 'Erro'); return; }
     carregar();
   }
-  function definir(s) {
-    const v = prompt('Quantidade correta de ' + nomeProd(s) + ' em ' + s.local + ':', String(s.saldo));
+  async function definir(s) {
+    const v = await perguntar('Quantidade correta de ' + nomeProd(s) + ' em ' + s.local + ':', String(s.saldo));
     if (v === null) return;
     const novo = parseInt(v, 10);
-    if (isNaN(novo) || novo < 0) { alert('Informe um número válido.'); return; }
+    if (isNaN(novo) || novo < 0) { avisar('Informe um número válido.'); return; }
     const dif = novo - s.saldo;
     if (dif !== 0) ajustar(s, dif);
   }

@@ -2,6 +2,7 @@ import { pool, q } from '../../../lib/db';
 import { exigir } from '../../../lib/guard';
 import { garantir, saldo } from '../../../lib/estoque';
 import { proximoCodigo } from '../../../lib/codigo';
+import { garantirClientes, DISPONIVEL } from '../../../lib/clientes';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,7 +14,10 @@ export async function GET() {
   const g = await exigir(false);
   if (g.erro) return g.erro;
   const admin = g.s.papel === 'admin';
-  const base = `select v.id, v.codigo, v.data_venda, c.nome as cliente, c.telefone, u.nome as vendedor, v.total_liquido, v.desconto, s.situacao, s.saldo_devedor, v.comissao_valor,
+  await garantirClientes(pool);
+  const base = `select v.id, v.codigo, v.data_venda, v.cliente_id, c.nome as cliente,
+    (select max(m.enviado_em) from mensagens_enviadas m where m.cliente_id = v.cliente_id and m.tipo = 'cobranca') as ult_cobranca,
+    (select max(m.enviado_em) from mensagens_enviadas m where m.cliente_id = v.cliente_id and m.tipo = 'posvenda') as ult_posvenda, c.telefone, u.nome as vendedor, v.total_liquido, v.desconto, s.situacao, s.saldo_devedor, v.comissao_valor,
     coalesce((select string_agg(i.quantidade || 'x ' || i.descricao, ', ' order by i.id) from venda_itens i where i.venda_id = v.id), '') as itens,
     coalesce((select bool_and(i.status_entrega = 'entregue') from venda_itens i where i.venda_id = v.id), true) as entregue
     from vendas v join clientes c on c.id = v.cliente_id join usuarios u on u.id = v.vendedor_id join v_venda_saldo s on s.venda_id = v.id where not v.cancelada`;
@@ -74,7 +78,13 @@ export async function POST(req) {
   const cx = await pool.connect();
   try {
     await garantir(cx);
+    await garantirClientes(cx);
     await cx.query('begin');
+    let credito = null;
+    if (b.credito_id) {
+      credito = (await cx.query(`select k.id from creditos k where k.id = $1 and k.cliente_id = $2 and ${DISPONIVEL} for update of k`, [Number(b.credito_id), cli.id])).rows[0];
+      if (!credito) throw new Error('O desconto escolhido não está mais disponível. Tire o desconto e salve de novo.');
+    }
     const pedido = new Map();
     for (const i of itens) if (i.ent === 'estoque') pedido.set(i.id, (pedido.get(i.id) || 0) + i.qtd);
     for (const [apr, qt] of pedido) {
@@ -93,6 +103,7 @@ export async function POST(req) {
       else if (p.rec) await cx.query(`insert into pagamentos (venda_id, valor, data_prevista, data_original, data_recebimento, situacao, informado_por, informado_em) values ($1, $2, $3, $3, $3, 'informado', $4, now())`, [id, p.valor, p.prev, g.s.id]);
       else await cx.query(`insert into pagamentos (venda_id, valor, data_prevista, data_original, situacao) values ($1, $2, $3, $3, 'agendado')`, [id, p.valor, p.prev]);
     }
+    if (credito) await cx.query('update creditos set usado_venda_id = $1, usado_em = now() where id = $2', [id, credito.id]);
     await cx.query('commit');
     return Response.json({ id, codigo });
   } catch (e) {

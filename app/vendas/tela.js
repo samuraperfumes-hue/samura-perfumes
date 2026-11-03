@@ -2,15 +2,8 @@
 import { useEffect, useState } from 'react';
 import { api, brl, dtBR, hojeISO, wa } from '../util';
 import Pagamentos from './pagamentos';
-
-const LINK = 'https://mpago.li/1o3MyQE';
-const saudacao = () => {
-  const h = new Date().getHours();
-  return h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
-};
-const primeiroNome = (nome) => { const t = String(nome || '').trim().split(/\s+/)[0] || ''; return t ? t.charAt(0).toUpperCase() + t.slice(1).toLowerCase() : ''; };
-const textoPosVenda = (nome) => { const pn = primeiroNome(nome); return saudacao() + (pn ? ', ' + pn : '') + '! 😊\n\nMuito obrigado pela sua compra! Queremos saber como está sendo sua experiência com o perfume, seu feedback nos motiva a melhorar sempre.\n\nSe puder, responda com uma nota de 0 a 10 para o perfume. Sua opinião é muito importante para nós! ⭐\n\nE conheça as nossas outras fragrâncias, com notas, história e melhor uso: https://samura-perfumes.vercel.app/fragrancias\n\nSamura Perfumes 💛'; };
-const textoCobranca = (nome, pix) => { const pn = primeiroNome(nome); return saudacao() + (pn ? ', ' + pn : '') + '! 😊\n\nEsperamos que esteja aproveitando sua compra! Passando só para confirmar se deu tudo certo e nos colocar à disposição para qualquer dúvida ou novas aquisições.\n\nPara facilitar futuros contatos ou acertos, segue minha chave Pix: ' + pix + '.\n\nSe preferir pagar no cartão, é só acessar: ' + LINK + '\n\nConte conosco! 💛'; };
+import { textoPosVenda, textoCobranca, registrar, haQuanto, recente } from '../mensagens';
+import { avisar, confirmar, perguntar } from '../dialogo';
 
 const n = (v) => Number(String(v || '0').replace(',', '.')) || 0;
 const novoItem = () => ({ tipo: 'Perfume', frag: '', volume: '50 ml', qtd: '1', preco: '', manual: false, entrega: '' });
@@ -44,6 +37,8 @@ export default function Tela({ admin, eu, vendedores }) {
   const [todas, setTodas] = useState(false);
   const [busca, setBusca] = useState('');
   const [pix, setPix] = useState('21 964147761');
+  const [creditos, setCreditos] = useState([]);
+  const [creditoSel, setCreditoSel] = useState(null);
 
   async function carregar() {
     const [a, b, c, e, cf] = await Promise.all([api('/api/catalogo', 'GET'), api('/api/clientes', 'GET'), api('/api/vendas', 'GET'), api('/api/estoque', 'GET'), api('/api/config', 'GET')]);
@@ -96,6 +91,25 @@ export default function Tela({ admin, eu, vendedores }) {
   const taxa = cTaxa !== '' ? n(cTaxa) : sel ? Number(sel.comissao_valor) : 0;
   const valorC = tipoC === 'fixo' ? taxa : (liquido * taxa) / 100;
 
+  const cliSel = carteira.find((c) => c.nome.toLowerCase() === cliente.trim().toLowerCase());
+  const cliSelId = cliSel ? cliSel.id : null;
+  useEffect(() => {
+    setCreditoSel(null);
+    if (!cliSelId) { setCreditos([]); return; }
+    let vivo = true;
+    api('/api/creditos?cliente_id=' + cliSelId, 'GET').then((r) => { if (vivo) setCreditos(r.ok ? r.d : []); });
+    return () => { vivo = false; };
+  }, [cliSelId]);
+  const credAtual = creditos.find((k) => k.id === creditoSel);
+  useEffect(() => {
+    if (credAtual) setDesconto(String(Math.round(bruto * Number(credAtual.pct)) / 100));
+  }, [bruto, creditoSel]);
+  function aplicarCredito(k) {
+    if (creditoSel === k.id) { setCreditoSel(null); setDesconto('0'); return; }
+    setCreditoSel(k.id);
+    setDesconto(String(Math.round(bruto * Number(k.pct)) / 100));
+  }
+
   function gerarParcelas() {
     const k = parseInt(nPar, 10);
     if (!(k > 0) || !(liquido > 0)) return [];
@@ -106,12 +120,12 @@ export default function Tela({ admin, eu, vendedores }) {
   }
 
   async function novoCliente() {
-    const nome = prompt('Nome do cliente:');
+    const nome = await perguntar('Nome do cliente:', '', { titulo: 'Novo cliente' });
     if (!nome) return;
-    const tel = prompt('WhatsApp (opcional):') || '';
+    const tel = (await perguntar('WhatsApp (opcional):', '', { titulo: 'Novo cliente' })) || '';
     let r = await api('/api/clientes', 'POST', { nome, telefone: tel, vendedor_id: vend });
-    if (!r.ok && r.d.duplicado && confirm(r.d.erro + ' Cadastrar mesmo assim?')) r = await api('/api/clientes', 'POST', { nome, telefone: tel, vendedor_id: vend, forcar: true });
-    if (!r.ok) { alert(r.d.erro || 'Erro ao cadastrar.'); return; }
+    if (!r.ok && r.d.duplicado && (await confirmar(r.d.erro + ' Cadastrar mesmo assim?', { titulo: 'Cliente parecido', ok: 'Cadastrar' }))) r = await api('/api/clientes', 'POST', { nome, telefone: tel, vendedor_id: vend, forcar: true });
+    if (!r.ok) { avisar(r.d.erro || 'Erro ao cadastrar.'); return; }
     await carregar();
     setCliente(nome.trim());
   }
@@ -134,7 +148,7 @@ export default function Tela({ admin, eu, vendedores }) {
     if (modo === 'pendente' && dataPrev) pagamento.data_prevista = dataPrev;
     if (modo === 'parcial') { pagamento.valor_pago = valorPago; pagamento.data_restante = dataRest; }
     if (modo === 'parcelado') pagamento.parcelas = gerarParcelas();
-    const body = { cliente_id: cli.id, vendedor_id: vend, itens: lista, desconto, data_venda: data, observacoes: obs, pagamento };
+    const body = { cliente_id: cli.id, vendedor_id: vend, itens: lista, desconto, data_venda: data, observacoes: obs, pagamento, credito_id: creditoSel || undefined };
     if (admin && cTaxa !== '') { body.comissao_tipo = tipoC; body.comissao_taxa = cTaxa; }
     const r = await api('/api/vendas', 'POST', body);
     if (!r.ok) return setErro(r.d.erro || 'Erro ao salvar.');
@@ -145,6 +159,7 @@ export default function Tela({ admin, eu, vendedores }) {
       const texto = (h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite') + ', ' + pn + '! Queremos saber como está sendo sua experiência com nosso perfume, seu feedback nos motiva a melhorar sempre! Samura Perfumes';
       setAgrad({ nome: cli.nome, url: wa(cli.telefone, texto) });
     } else setAgrad(null);
+    setCreditoSel(null); setCreditos([]);
     setItens([novoItem()]); setCliente(''); setDesconto('0'); setObs(''); setCTipo(''); setCTaxa(''); setModo('pendente'); setValorPago(''); setDataPrev(''); setData(hojeISO());
     carregar();
   }
@@ -188,8 +203,19 @@ export default function Tela({ admin, eu, vendedores }) {
           </div>
         ))}
         <p><button type='button' className='bs' onClick={() => setItens([...itens, novoItem()])}>+ Adicionar produto</button></p>
+        {creditos.length > 0 && (
+          <div style={{ border: '1px solid #D4AF37', borderRadius: 6, padding: '10px 12px', margin: '4px 0 14px', background: '#1f1a0c' }}>
+            {creditos.map((k) => (
+              <p key={k.id} style={{ margin: '4px 0', fontSize: 13 }}>
+                🎁 <b>{cliente.trim()}</b> tem <b>{Number(k.pct)}% de desconto</b> {k.tipo === 'boas_vindas' ? 'de boas-vindas (primeira compra por indicação)' : 'por ter indicado ' + (k.origem_nome || 'um amigo') + (k.validade ? ', válido até ' + dtBR(k.validade) : '')}.{' '}
+                <button type='button' className='bs' onClick={() => aplicarCredito(k)}>{creditoSel === k.id ? 'Tirar desconto' : 'Aplicar'}</button>
+              </p>
+            ))}
+            {credAtual && <p className='ok' style={{ margin: '6px 0 0' }}>Desconto de {Number(credAtual.pct)}% aplicado: {brl(desc)}. Ele será marcado como usado ao salvar a venda.</p>}
+          </div>
+        )}
         <div className='linha'>
-          <div><label>Desconto total (R$)</label><input value={desconto} inputMode='decimal' onChange={(e) => setDesconto(e.target.value)} /></div>
+          <div><label>Desconto total (R$)</label><input value={desconto} inputMode='decimal' onChange={(e) => { setDesconto(e.target.value); setCreditoSel(null); }} /></div>
           <div><label>Observações</label><input value={obs} onChange={(e) => setObs(e.target.value)} /></div>
         </div>
         {admin && sel && verCom && (
@@ -236,8 +262,8 @@ export default function Tela({ admin, eu, vendedores }) {
                   <tr key={v.id}>
                     <td>{v.codigo}</td><td>{dtBR(v.data_venda)}</td><td>{v.cliente}</td>{admin && <td>{v.vendedor}</td>}
                     <td>{v.itens}</td><td>{brl(v.total_liquido)}</td>
-                    <td>{v.situacao}{Number(v.saldo_devedor) > 0 && Number(v.saldo_devedor) < Number(v.total_liquido) ? ' (falta ' + brl(v.saldo_devedor) + ')' : ''}{v.situacao !== 'Paga' && (v.telefone ? <div style={{ marginTop: 6 }}><a className='bs' style={{ display: 'inline-block', whiteSpace: 'nowrap' }} href={wa(v.telefone, textoCobranca(v.cliente, pix))} target='_blank' rel='noreferrer'>Cobrança</a></div> : <span className='aviso'> (sem WhatsApp)</span>)}</td>
-                    <td>{v.entregue ? 'Entregue' : 'Pendente'}{v.entregue && v.telefone && <div style={{ marginTop: 6 }}><a className='bs' style={{ display: 'inline-block', whiteSpace: 'nowrap' }} href={wa(v.telefone, textoPosVenda(v.cliente))} target='_blank' rel='noreferrer'>Pós-venda</a></div>}</td>{admin && verCom && <td>{brl(v.comissao_valor)}</td>}
+                    <td>{v.situacao}{Number(v.saldo_devedor) > 0 && Number(v.saldo_devedor) < Number(v.total_liquido) ? ' (falta ' + brl(v.saldo_devedor) + ')' : ''}{v.situacao !== 'Paga' && (v.telefone ? <div style={{ marginTop: 6 }}><a className='bs' style={{ display: 'inline-block', whiteSpace: 'nowrap' }} href={wa(v.telefone, textoCobranca(v.cliente, pix))} target='_blank' rel='noreferrer' onClick={() => registrar(v.cliente_id, 'cobranca', v.id).then(() => setTimeout(carregar, 300))}>Cobrança</a>{v.ult_cobranca && <div className='aviso' style={{ fontSize: 11, color: recente(v.ult_cobranca) ? '#ff9f43' : undefined }}>enviada {haQuanto(v.ult_cobranca)}</div>}</div> : <span className='aviso'> (sem WhatsApp)</span>)}</td>
+                    <td>{v.entregue ? 'Entregue' : 'Pendente'}{v.entregue && v.telefone && <div style={{ marginTop: 6 }}><a className='bs' style={{ display: 'inline-block', whiteSpace: 'nowrap' }} href={wa(v.telefone, textoPosVenda(v.cliente))} target='_blank' rel='noreferrer' onClick={() => registrar(v.cliente_id, 'posvenda', v.id).then(() => setTimeout(carregar, 300))}>Pós-venda</a>{v.ult_posvenda && <div className='aviso' style={{ fontSize: 11, color: recente(v.ult_posvenda) ? '#ff9f43' : undefined }}>enviada {haQuanto(v.ult_posvenda)}</div>}</div>}</td>{admin && verCom && <td>{brl(v.comissao_valor)}</td>}
                     <td><button className='bs' onClick={() => setAberta(aberta === v.id ? null : v.id)}>Pagamentos</button></td>
                   </tr>
                   {aberta === v.id && <tr key={'p' + v.id}><td colSpan={colunas}><Pagamentos vendaId={v.id} admin={admin} dataVenda={String(v.data_venda).slice(0, 10)} onChange={carregar} /></td></tr>}

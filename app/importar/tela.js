@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { api, brl } from '../util';
+import { confirmar } from '../dialogo';
 
 export default function Tela() {
   const [vendas, setVendas] = useState('');
@@ -51,7 +52,7 @@ export default function Tela() {
   }
 
   async function renumerar() {
-    if (!confirm('Renumerar os códigos de todas as vendas em ordem de data (VND-0001, VND-0002...)? Os códigos antigos deixam de valer.')) return;
+    if (!await confirmar('Renumerar os códigos de todas as vendas em ordem de data (VND-0001, VND-0002...)? Os códigos antigos deixam de valer.')) return;
     setManut('');
     const r = await api('/api/vendas/renumerar', 'POST');
     setManut(r.ok ? 'Códigos renumerados: ' + r.d.total + ' venda(s).' : r.d.erro || 'Erro');

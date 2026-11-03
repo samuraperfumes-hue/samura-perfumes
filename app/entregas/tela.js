@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { api, wa } from '../util';
+import { avisar } from '../dialogo';
 
 const saudacao = () => {
   const h = new Date().getHours();
@@ -19,7 +20,7 @@ export default function Tela({ admin }) {
   useEffect(() => { carregar(); }, []);
   async function marcar(ids, status) {
     const r = await api('/api/entregas', 'POST', { ids, status });
-    if (!r.ok) { alert(r.d.erro || 'Erro'); return; }
+    if (!r.ok) { avisar(r.d.erro || 'Erro'); return; }
     if (status === 'entregue') {
       const vistos = new Map();
       itens.filter((i) => ids.includes(i.id)).forEach((i) => {

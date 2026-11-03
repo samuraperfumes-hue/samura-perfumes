@@ -1,5 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { textoResgate, textoConvite, textoIndique, linkZap, registrar, haQuanto, recente } from '../mensagens';
+import { confirmar } from '../dialogo';
 
 async function api(url, method, body) {
   const r = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
@@ -8,32 +10,9 @@ async function api(url, method, body) {
 }
 
 const ORIGENS = ['Indicação', 'Instagram', 'WhatsApp', 'Conhecido', 'Trabalho', 'Evento', 'Outro'];
-const LINK_FRAG = 'https://samura-perfumes.vercel.app/fragrancias';
 const hojeISO = () => new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 const dtBR = (d) => (d ? String(d).slice(0, 10).split('-').reverse().join('/') : '-');
 const diasDesde = (iso) => Math.floor((new Date(hojeISO() + 'T12:00:00') - new Date(String(iso).slice(0, 10) + 'T12:00:00')) / 86400000);
-const saudacao = () => {
-  const h = new Date().getHours();
-  return h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
-};
-const primeiroNome = (nome) => { const t = String(nome || '').trim().split(/\s+/)[0] || ''; return t ? t.charAt(0).toUpperCase() + t.slice(1).toLowerCase() : ''; };
-const ola = (nome) => { const pn = primeiroNome(nome); return saudacao() + (pn ? ', ' + pn : '') + '! 😊\n\n'; };
-const textoResgate = (nome) => ola(nome) + 'Quanto tempo! Aqui é da Samura Perfumes. Passando para saber como está o seu perfume: você ficou satisfeito? Como está a fixação e o desempenho dele? Seu retorno nos motiva muito a melhorar sempre.\n\nAproveitando, temos fragrâncias que talvez você ainda não conheça, com notas, história e melhor uso: ' + LINK_FRAG + '\n\nSe algum aroma chamar a sua atenção, é só me responder por aqui que eu separo o seu. Será um prazer ter você de volta! 💛\n\nSamura Perfumes';
-const textoConvite = (nome, indicou) => ola(nome)
-  + (indicou ? 'Aqui é da Samura Perfumes. ' + primeiroNome(indicou) + ' indicou você e achamos que você ia gostar de conhecer nossas fragrâncias, inspiradas nos grandes perfumes. E por ter vindo por indicação, você ganha 5% de desconto na sua primeira compra! 🎁' : 'Aqui é da Samura Perfumes! Queremos te apresentar nossas fragrâncias, inspiradas nos grandes perfumes.')
-  + '\n\nMontamos uma página com cada uma delas, com notas, história e o melhor momento de usar: ' + LINK_FRAG
-  + '\n\nSe algum aroma chamar a sua atenção, é só me responder por aqui que eu te ajudo a escolher. 💛\n\nSe preferir não receber nossas mensagens, é só avisar.\n\nSamura Perfumes';
-const textoIndique = (nome) => (nome ? ola(nome) : 'Oi! 😊\n\n')
-  + 'Conhece alguém que vai amar nossos perfumes? Indique um amigo para a Samura Perfumes e ganhe! 🎁\n\n'
-  + '✅ Você ganha 10% de desconto na sua próxima compra\n✅ Seu amigo ganha 5% na primeira compra dele\n\n'
-  + 'É só cadastrar o nome e o WhatsApp dele aqui: ' + LINK_FRAG + '#indique\n\n'
-  + 'O desconto vale depois que o seu amigo fizer a primeira compra, por 90 dias, e não acumula com outras promoções.\n\n'
-  + 'Obrigado por fazer parte da Samura! 💛';
-const linkZap = (tel, texto) => {
-  const d = String(tel || '').replace(/[^0-9]/g, '');
-  if (!d) return null;
-  return 'https://wa.me/' + (d.startsWith('55') && d.length > 11 ? d : '55' + d) + '?text=' + encodeURIComponent(texto);
-};
 const telAgenda = (t) => {
   let d = String(t || '').replace(/[^0-9]/g, '');
   if (d.length > 11 && d.startsWith('55')) d = d.slice(2);
@@ -42,9 +21,10 @@ const telAgenda = (t) => {
   if (d.length === 10) return d.slice(0, 2) + ' ' + d.slice(2, 6) + '-' + d.slice(6);
   return d;
 };
+const descTxt = (k) => (k ? '🎁 ' + Number(k.pct) + '% ' + (k.tipo === 'boas_vindas' ? 'na 1ª compra' : 'de desconto' + (k.validade ? ' até ' + dtBR(k.validade) : '')) : '');
 
 export default function Tela({ admin, eu, vendedores }) {
-  const vazio = { nome: '', telefone: '', observacoes: '', vendedor_id: String(eu), origem: '', indicado_por: '' };
+  const vazio = { nome: '', telefone: '', observacoes: '', vendedor_id: String(eu), origem: '', indicado_por: '', indicado_tel: '' };
   const [lista, setLista] = useState([]);
   const [f, setF] = useState(vazio);
   const [edit, setEdit] = useState(null);
@@ -100,25 +80,26 @@ export default function Tela({ admin, eu, vendedores }) {
 
   function editar(c) {
     setEdit(c.id); setErro(''); setOk('');
-    setF({ nome: c.nome, telefone: c.telefone || '', observacoes: c.observacoes || '', vendedor_id: String(c.vendedor_id), origem: c.origem || '', indicado_por: c.indicado_por || '' });
+    setF({ nome: c.nome, telefone: c.telefone || '', observacoes: c.observacoes || '', vendedor_id: String(c.vendedor_id), origem: c.origem || '', indicado_por: c.indicado_por || '', indicado_tel: c.indicado_tel || '' });
     window.scrollTo(0, 0);
   }
   async function excluir(c) {
-    if (!confirm('Excluir ' + c.nome + '?')) return;
+    if (!(await confirmar('Excluir ' + c.nome + '?', { titulo: 'Excluir cliente', ok: 'Excluir', perigo: true }))) return;
     const r = await api('/api/clientes/' + c.id, 'DELETE');
     if (!r.ok) { setErro(r.d.erro || 'Erro ao excluir.'); return; }
     recarregar();
   }
-  function marcarConvite(c) {
-    api('/api/clientes/' + c.id, 'PATCH', { acao: 'convite' }).then(recarregar);
+  function enviado(c, tipo) {
+    registrar(c.id, tipo).then(() => setTimeout(recarregar, 300));
   }
 
   const termo = busca.trim().toLowerCase();
-  const base = lista.map((c) => ({ ...c, dias: c.ultima_compra ? diasDesde(c.ultima_compra) : null }));
+  const base = lista.map((c) => ({ ...c, dias: c.ultima_compra ? diasDesde(c.ultima_compra) : null, msgs: c.msgs || {} }));
   const aguardando = base.filter((c) => c.origem === 'Indicação' && c.compras === 0 && !c.convite_em).length;
+  const comDesconto = base.filter((c) => c.desconto).length;
   const vis = base
     .filter((c) => (c.nome + ' ' + (c.telefone || '') + ' ' + (c.indicado_por || '')).toLowerCase().includes(termo))
-    .filter((c) => mostrar === 'todos' || (mostrar === 'clientes' ? c.compras > 0 : mostrar === 'potenciais' ? c.compras === 0 : c.origem === 'Indicação'))
+    .filter((c) => mostrar === 'todos' || (mostrar === 'clientes' ? c.compras > 0 : mostrar === 'potenciais' ? c.compras === 0 : mostrar === 'descontos' ? !!c.desconto : c.origem === 'Indicação'))
     .filter((c) => Number(minDias) === 0 || (c.dias !== null && c.dias >= Number(minDias)))
     .sort((a, b) => {
       if (ordem === 'antigos') return (b.dias === null ? -1 : b.dias) - (a.dias === null ? -1 : a.dias) || a.nome.localeCompare(b.nome, 'pt-BR');
@@ -127,6 +108,7 @@ export default function Tela({ admin, eu, vendedores }) {
     });
 
   const botao = { display: 'inline-block', whiteSpace: 'nowrap' };
+  const quando = (iso) => iso && <div className='aviso' style={{ fontSize: 11, color: recente(iso) ? '#ff9f43' : undefined }}>enviado {haQuanto(iso)}</div>;
   return (
     <>
       <div className='card'>
@@ -148,7 +130,8 @@ export default function Tela({ admin, eu, vendedores }) {
               <option value=''>Não informada</option>
               {ORIGENS.map((o) => <option key={o}>{o}</option>)}
             </select></div>
-          {f.origem === 'Indicação' && <div style={{ flex: 2 }}><label>Indicado por</label><input value={f.indicado_por} placeholder='Nome de quem indicou' onChange={(e) => setF({ ...f, indicado_por: e.target.value })} /></div>}
+          {f.origem === 'Indicação' && <div><label>Indicado por</label><input value={f.indicado_por} placeholder='Nome de quem indicou' onChange={(e) => setF({ ...f, indicado_por: e.target.value })} /></div>}
+          {f.origem === 'Indicação' && <div><label>WhatsApp de quem indicou</label><input value={f.indicado_tel} inputMode='tel' placeholder='para gerar os 10% dele' onChange={(e) => setF({ ...f, indicado_tel: e.target.value })} /></div>}
         </div>
         <label>Observações</label>
         <input value={f.observacoes} onChange={(e) => setF({ ...f, observacoes: e.target.value })} />
@@ -162,8 +145,9 @@ export default function Tela({ admin, eu, vendedores }) {
       </div>
       <div className='card'>
         <h2>Clientes ({vis.length})</h2>
-        <p><a className='bs' style={{ display: 'inline-block', whiteSpace: 'nowrap' }} href={'https://wa.me/?text=' + encodeURIComponent(textoIndique(''))} target='_blank' rel='noreferrer'>🎁 Compartilhar Indique e ganhe</a> <span className='aviso'>Abre o WhatsApp para enviar a qualquer contato, grupo ou status.</span></p>
+        <p><a className='bs' style={botao} href={'https://wa.me/?text=' + encodeURIComponent(textoIndique(''))} target='_blank' rel='noreferrer'>🎁 Compartilhar Indique e ganhe</a> <span className='aviso'>Abre o WhatsApp para enviar a qualquer contato, grupo ou status.</span></p>
         {aguardando > 0 && <p className='ok'>💛 {aguardando} indicação(ões) nova(s) aguardando convite. <button type='button' className='bs' onClick={() => setMostrar('indicacoes')}>Ver</button></p>}
+        {comDesconto > 0 && <p className='ok'>🎁 {comDesconto} cliente(s) com desconto disponível. <button type='button' className='bs' onClick={() => setMostrar('descontos')}>Ver</button></p>}
         <div className='linha'>
           <div style={{ flex: 2 }}><label>Buscar</label><input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder='Nome ou telefone...' /></div>
           <div><label>Mostrar</label>
@@ -172,6 +156,7 @@ export default function Tela({ admin, eu, vendedores }) {
               <option value='clientes'>Já compraram</option>
               <option value='potenciais'>Potenciais (sem compras)</option>
               <option value='indicacoes'>Indicações</option>
+              <option value='descontos'>Com desconto disponível</option>
             </select></div>
           <div><label>Ordenar por</label>
             <select value={ordem} onChange={(e) => setOrdem(e.target.value)}>
@@ -188,27 +173,30 @@ export default function Tela({ admin, eu, vendedores }) {
               <option value='180'>180 dias ou mais</option>
             </select></div>
         </div>
+        <p className='aviso' style={{ fontSize: 12 }}>Embaixo de cada botão aparece quando a mensagem foi enviada. Em laranja: enviada nos últimos 7 dias.</p>
         <div className='tabela'>
           <table>
             <thead><tr><th>Cliente</th><th>Última compra</th><th>Compras</th><th></th></tr></thead>
             <tbody>
               {vis.map((c) => {
                 const potencial = c.compras === 0;
-                const zap = linkZap(c.telefone, potencial ? textoConvite(c.nome, c.indicado_por) : textoResgate(c.nome));
+                const zap = potencial ? linkZap(c.telefone, textoConvite(c.nome, c.indicado_por)) : linkZap(c.telefone, textoResgate(c.nome, c.desconto));
+                const tipo = potencial ? 'convite' : 'resgate';
                 return (
                   <tr key={c.id}>
                     <td>{c.nome}
                       {c.telefone && <div className='aviso'>{c.telefone}</div>}
                       {admin && <div className='aviso'>{c.vendedor}</div>}
                       {c.origem && <div className='aviso'>{c.origem === 'Indicação' && c.indicado_por ? 'Indicação de ' + c.indicado_por + (c.indicado_tel ? ' (' + c.indicado_tel + ')' : '') : 'Origem: ' + c.origem}</div>}
+                      {c.desconto && <div className='ok' style={{ fontSize: 12 }}>{descTxt(c.desconto)}</div>}
                       {c.observacoes && <div className='aviso'>{c.observacoes}</div>}
                     </td>
-                    <td>{c.ultima_compra ? <>{dtBR(c.ultima_compra)}<div className='aviso'>há {c.dias} {c.dias === 1 ? 'dia' : 'dias'}</div></> : <span className='aviso'>potencial{c.convite_em ? <><br />convite em {dtBR(c.convite_em)}</> : ''}</span>}</td>
+                    <td>{c.ultima_compra ? <>{dtBR(c.ultima_compra)}<div className='aviso'>há {c.dias} {c.dias === 1 ? 'dia' : 'dias'}</div></> : <span className='aviso'>potencial</span>}</td>
                     <td>{c.compras}</td>
                     <td>
-                      {zap && <div><a className='bs' style={botao} href={zap} target='_blank' rel='noreferrer' onClick={potencial ? () => marcarConvite(c) : undefined}>{potencial ? 'Convite' : 'Resgate'}</a></div>}
-                      {!potencial && c.telefone && <div style={{ marginTop: 6 }}><a className='bs' style={botao} href={linkZap(c.telefone, textoIndique(c.nome))} target='_blank' rel='noreferrer'>Indique e ganhe</a></div>}
-                      <div style={{ marginTop: zap ? 6 : 0 }}><button type='button' className='bs' onClick={() => editar(c)}>Editar</button></div>
+                      {zap && <div><a className='bs' style={botao} href={zap} target='_blank' rel='noreferrer' onClick={() => enviado(c, tipo)}>{potencial ? 'Convite' : 'Resgate'}</a>{quando(potencial ? (c.msgs.convite || c.convite_em) : c.msgs.resgate)}</div>}
+                      {!potencial && c.telefone && <div style={{ marginTop: 6 }}><a className='bs' style={botao} href={linkZap(c.telefone, textoIndique(c.nome))} target='_blank' rel='noreferrer' onClick={() => enviado(c, 'indique')}>Indique e ganhe</a>{quando(c.msgs.indique)}</div>}
+                      <div style={{ marginTop: 6 }}><button type='button' className='bs' onClick={() => editar(c)}>Editar</button></div>
                       {potencial && <div style={{ marginTop: 6 }}><button type='button' className='bs' style={{ borderColor: '#d4707f', color: '#d4707f' }} onClick={() => excluir(c)}>Excluir</button></div>}
                     </td>
                   </tr>
