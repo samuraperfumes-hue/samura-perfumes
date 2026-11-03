@@ -1,5 +1,7 @@
 import { q } from '../../../lib/db';
 import { exigir } from '../../../lib/guard';
+import { pool } from '../../../lib/db';
+import { garantirClientes, origemOk } from '../../../lib/clientes';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,7 +10,8 @@ const dig = (s) => String(s || '').replace(/[^0-9]/g, '');
 export async function GET() {
   const g = await exigir(false);
   if (g.erro) return g.erro;
-  const base = "select c.id, c.nome, c.telefone, c.observacoes, c.vendedor_id, u.nome as vendedor, (select max(v.data_venda) from vendas v where v.cliente_id = c.id and not v.cancelada) as ultima_compra, (select count(*)::int from vendas v where v.cliente_id = c.id and not v.cancelada) as compras from clientes c join usuarios u on u.id = c.vendedor_id";
+  await garantirClientes(pool);
+  const base = "select c.id, c.nome, c.telefone, c.observacoes, c.vendedor_id, u.nome as vendedor, c.origem, c.indicado_por, c.indicado_tel, c.convite_em, (select max(v.data_venda) from vendas v where v.cliente_id = c.id and not v.cancelada) as ultima_compra, (select count(*)::int from vendas v where v.cliente_id = c.id and not v.cancelada) as compras from clientes c join usuarios u on u.id = c.vendedor_id";
   const r = g.s.papel === 'admin'
     ? await q(base + ' order by c.nome')
     : await q(base + ' where c.vendedor_id = $1 order by c.nome', [g.s.id]);
@@ -18,6 +21,7 @@ export async function GET() {
 export async function POST(req) {
   const g = await exigir(false);
   if (g.erro) return g.erro;
+  await garantirClientes(pool);
   const b = await req.json();
   const nome = String(b.nome || '').trim();
   if (!nome) return Response.json({ erro: 'Informe o nome do cliente.' }, { status: 400 });
@@ -28,6 +32,6 @@ export async function POST(req) {
     const igual = todos.find((c) => c.nome.trim().toLowerCase() === nome.toLowerCase() || (dig(fone).length >= 8 && dig(c.telefone) === dig(fone)));
     if (igual) return Response.json({ erro: 'Já existe um cliente parecido nesta carteira: ' + igual.nome + '.', duplicado: true }, { status: 409 });
   }
-  const r = await q('insert into clientes (vendedor_id, nome, telefone, observacoes, criado_por) values ($1, $2, $3, $4, $5) returning id', [dono, nome, fone || null, String(b.observacoes || '').trim() || null, g.s.id]);
+  const r = await q('insert into clientes (vendedor_id, nome, telefone, observacoes, criado_por, origem, indicado_por) values ($1, $2, $3, $4, $5, $6, $7) returning id', [dono, nome, fone || null, String(b.observacoes || '').trim() || null, g.s.id, origemOk(b.origem), String(b.indicado_por || '').trim() || null]);
   return Response.json({ id: r.rows[0].id });
 }

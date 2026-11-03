@@ -3,6 +3,44 @@ import { useState } from 'react';
 
 const link = (zap, nome) => 'https://wa.me/' + zap + '?text=' + encodeURIComponent('Olá! Vi a fragrância ' + nome + ' no catálogo da Samura Perfumes e quero fazer meu pedido.');
 
+function Indicar() {
+  const vazio = { quem: '', quem_tel: '', nome: '', telefone: '', aviso: false, site: '' };
+  const [f, setF] = useState(vazio);
+  const [msg, setMsg] = useState('');
+  const [erro, setErro] = useState('');
+  const [env, setEnv] = useState(false);
+  const set = (k, v) => setF({ ...f, [k]: v });
+  async function enviar(e) {
+    e.preventDefault();
+    setErro(''); setMsg(''); setEnv(true);
+    const r = await fetch('/api/indicacao', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(f) }).catch(() => null);
+    const d = r ? await r.json().catch(() => ({})) : {};
+    setEnv(false);
+    if (!r || !r.ok) { setErro(d.erro || 'Não foi possível enviar agora. Tente de novo.'); return; }
+    setF(vazio);
+    setMsg('Obrigado pela indicação! Vamos entrar em contato com o seu amigo. 💛');
+  }
+  return (
+    <form className='fr-indica' onSubmit={enviar}>
+      <h2>Conhece alguém que vai amar?</h2>
+      <p>Indique um amigo e a gente apresenta nossas fragrâncias para ele. Quando ele fizer a primeira compra, você ganha desconto na sua próxima.</p>
+      <label>Seu nome</label>
+      <input value={f.quem} onChange={(e) => set('quem', e.target.value)} maxLength={80} />
+      <label>Seu WhatsApp (com DDD)</label>
+      <input value={f.quem_tel} inputMode='tel' placeholder='21 99999-9999' onChange={(e) => set('quem_tel', e.target.value)} />
+      <label>Nome do amigo</label>
+      <input value={f.nome} onChange={(e) => set('nome', e.target.value)} maxLength={80} />
+      <label>WhatsApp do amigo (com DDD)</label>
+      <input value={f.telefone} inputMode='tel' placeholder='21 99999-9999' onChange={(e) => set('telefone', e.target.value)} />
+      <input className='fr-oculto' tabIndex={-1} autoComplete='off' value={f.site} onChange={(e) => set('site', e.target.value)} aria-hidden='true' />
+      <label className='fr-check'><input type='checkbox' checked={f.aviso} onChange={(e) => set('aviso', e.target.checked)} /> Avisei meu amigo que a Samura Perfumes vai entrar em contato.</label>
+      {erro && <p className='fr-erro'>{erro}</p>}
+      {msg && <p className='fr-ok'>{msg}</p>}
+      <button className='fr-zap' disabled={env}>{env ? 'Enviando...' : 'Indicar amigo'}</button>
+    </form>
+  );
+}
+
 export default function Lista({ itens, zap }) {
   const [filtro, setFiltro] = useState('Todos');
   const [busca, setBusca] = useState('');
@@ -62,6 +100,8 @@ export default function Lista({ itens, zap }) {
           </article>
         );
       })}
+
+      <Indicar />
 
       <footer className='fr-rodape'>
         <p>Samura Perfumes · Fragrâncias inspiradas. As marcas citadas pertencem aos seus respectivos donos e servem apenas como referência olfativa; não temos vínculo com elas.</p>

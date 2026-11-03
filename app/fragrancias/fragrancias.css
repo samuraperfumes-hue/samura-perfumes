@@ -22,3 +22,14 @@
 .fr-suave, .fr-vazio { color: #c5a059; font-size: 13px; }
 .fr-zap { display: block; text-align: center; background: linear-gradient(135deg, #D4AF37, #AA7C11); color: #0b0b0b; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; font-size: 13px; padding: 12px; border-radius: 4px; text-decoration: none; margin-top: 4px; }
 .fr-rodape { margin-top: 24px; text-align: center; color: #7d6a3a; font-size: 11px; line-height: 1.5; }
+.fr-indica { margin-top: 28px; background: #141414; border: 1px solid #D4AF37; border-radius: 8px; padding: 18px 16px; }
+.fr-indica h2 { margin: 0 0 6px; font-size: 18px; color: #D4AF37; }
+.fr-indica p { margin: 0 0 12px; font-size: 13px; line-height: 1.5; color: #e0e0e0; }
+.fr-indica label { display: block; font-size: 11px; font-weight: 600; color: #c5a059; text-transform: uppercase; letter-spacing: 0.5px; margin: 10px 0 4px; }
+.fr-indica .fr-check { display: flex; gap: 8px; align-items: flex-start; text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 13px; color: #e0e0e0; margin: 14px 0 10px; }
+.fr-indica .fr-check input { width: auto; margin-top: 2px; }
+.fr-indica button.fr-zap { width: 100%; border: none; cursor: pointer; font-family: inherit; }
+.fr-indica button.fr-zap:disabled { opacity: 0.6; }
+.fr-oculto { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.fr-erro { color: #ff8080 !important; }
+.fr-ok { color: #7ddc8a !important; }
