@@ -1,6 +1,6 @@
 import { pool } from '../../../lib/db';
 import { exigir } from '../../../lib/guard';
-import { lerConfigGeral } from '../../../lib/config';
+import { lerConfigGeral, PRAZOS, dias } from '../../../lib/config';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,9 +19,16 @@ export async function POST(req) {
   if (!/^55\d{10,11}$/.test(zap)) return Response.json({ erro: 'WhatsApp inválido. Digite com DDD, por exemplo 21 96414-7761.' }, { status: 400 });
   const pix = String(b.pix || '').trim().slice(0, 80);
   if (!pix) return Response.json({ erro: 'Informe a chave Pix.' }, { status: 400 });
-  await lerConfigGeral(pool);
-  for (const [k, v] of [['whatsapp', zap], ['pix', pix]]) {
+  const atual = await lerConfigGeral(pool);
+  const pares = [['whatsapp', zap], ['pix', pix]];
+  for (const k of PRAZOS) {
+    if (b[k] === undefined || b[k] === '') continue;
+    const n = dias(b[k], -1);
+    if (n < 0) return Response.json({ erro: 'Os prazos precisam ser um número de dias entre 0 e 365.' }, { status: 400 });
+    pares.push([k, String(n)]);
+  }
+  for (const [k, v] of pares) {
     await pool.query('insert into config_geral (chave, valor) values ($1, $2) on conflict (chave) do update set valor = excluded.valor', [k, v]);
   }
-  return Response.json({ ok: true, whatsapp: zap, pix });
+  return Response.json({ ...atual, ...Object.fromEntries(pares), ok: true });
 }
