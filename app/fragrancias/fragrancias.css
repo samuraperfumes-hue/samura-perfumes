@@ -35,15 +35,17 @@
 .fr-ok { color: #7ddc8a !important; }
 .fr-indica .fr-regra { font-size: 11px; color: #c5a059; margin: 0 0 10px; }
 .fr-tit { flex: 1; min-width: 0; }
-.fr-mini { flex: 0 0 46px; width: 46px; height: 58px; border-radius: 6px; background: var(--fr, url(/frasco-m.webp)) 50% 62%/auto 76% no-repeat, #0b0b0b var(--fd, url(/fundo-amadeirado.webp)) center/cover; border: 1px solid #332A15; }
+.fr-mini { flex: 0 0 46px; width: 46px; height: 58px; border-radius: 6px; background: #0b0b0b var(--img, url(/api/foto/masc-amadeirado-1)) center/cover; border: 1px solid #332A15; }
 .fr-foto-box { margin: 6px auto 16px; width: min(240px, 70%); text-align: center; }
-.fr-foto { width: 100%; aspect-ratio: 4 / 5; background: var(--fr, url(/frasco-m.webp)) 50% 60%/auto 74% no-repeat, #0b0b0b var(--fd, url(/fundo-amadeirado.webp)) center/cover; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,.45); }
-.fr-masc { --fr: url(/frasco-m.webp); }
-.fr-fem { --fr: url(/frasco-f.webp); }
-.fr-e-doce { --fd: url(/fundo-doce.webp); }
-.fr-e-fresco { --fd: url(/fundo-fresco.webp); }
-.fr-e-floral { --fd: url(/fundo-floral.webp); }
-.fr-e-amadeirado { --fd: url(/fundo-amadeirado.webp); }
+.fr-foto { width: 100%; aspect-ratio: 4 / 5; background: #0b0b0b var(--img, url(/api/foto/masc-amadeirado-1)) center/cover; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,.45); }
+.fr-masc.fr-e-doce { --img: url(/api/foto/masc-doce-1); }
+.fr-masc.fr-e-fresco { --img: url(/api/foto/masc-fresco-1); }
+.fr-masc.fr-e-floral { --img: url(/api/foto/masc-floral-1); }
+.fr-masc.fr-e-amadeirado { --img: url(/api/foto/masc-amadeirado-1); }
+.fr-fem.fr-e-doce { --img: url(/api/foto/fem-doce-1); }
+.fr-fem.fr-e-fresco { --img: url(/api/foto/fem-fresco-1); }
+.fr-fem.fr-e-floral { --img: url(/api/foto/fem-floral-1); }
+.fr-fem.fr-e-amadeirado { --img: url(/api/foto/fem-amadeirado-1); }
 .fr-foto-box figcaption { margin-top: 10px; font-family: 'Cinzel', serif; font-weight: 700; color: #D4AF37; font-size: 15px; letter-spacing: 1px; text-transform: uppercase; }
 .fr-teste-chama { width: 100%; display: grid; grid-template-columns: 40px 1fr; gap: 2px 10px; align-items: center; text-align: left; background: linear-gradient(135deg, #2a2112, #141414); border: 1px solid #D4AF37; border-radius: 10px; padding: 14px 16px; margin-bottom: 14px; cursor: pointer; font-family: inherit; color: #e0e0e0; }
 .fr-teste-chama span { grid-row: span 2; font-size: 26px; text-align: center; }
