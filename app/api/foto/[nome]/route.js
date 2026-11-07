@@ -5,7 +5,16 @@ export const dynamic = 'force-dynamic';
 // Fotos da página de fragrâncias. Na primeira vez cada foto é copiada da origem fixa (commit
 // imutável no GitHub) para o banco; depois disso é sempre servida do banco, sem depender da origem.
 const ORIGEM = 'https://raw.githubusercontent.com/samuraperfumes-hue/samura-perfumes/';
-const FOTOS = {};
+const FOTOS = {
+  'masc-doce-1': 'abd352f3cb12441139d8ca8f78d9d3d21bbbb79b/fotos/masc-doce.webp',
+  'masc-fresco-1': 'abd352f3cb12441139d8ca8f78d9d3d21bbbb79b/fotos/masc-fresco.webp',
+  'masc-floral-1': 'abd352f3cb12441139d8ca8f78d9d3d21bbbb79b/fotos/masc-floral.webp',
+  'masc-amadeirado-1': 'abd352f3cb12441139d8ca8f78d9d3d21bbbb79b/fotos/masc-amadeirado.webp',
+  'fem-doce-1': 'abd352f3cb12441139d8ca8f78d9d3d21bbbb79b/fotos/fem-doce.webp',
+  'fem-fresco-1': 'abd352f3cb12441139d8ca8f78d9d3d21bbbb79b/fotos/fem-fresco.webp',
+  'fem-floral-1': 'abd352f3cb12441139d8ca8f78d9d3d21bbbb79b/fotos/fem-floral.webp',
+  'fem-amadeirado-1': 'abd352f3cb12441139d8ca8f78d9d3d21bbbb79b/fotos/fem-amadeirado.webp',
+};
 
 let pronto = false;
 async function garantir() {
