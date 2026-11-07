@@ -82,7 +82,7 @@ export default function Lista({ itens, zap }) {
 
       {teste ? <Teste itens={itens} zap={zap} fechar={() => setTeste(false)} verDetalhes={verDetalhes} /> : (
         <button type='button' className='fr-teste-chama' onClick={() => { setTeste(true); setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 30); }}>
-          <span>✨</span><b>Na dúvida? Descubra sua fragrância</b><small>5 perguntas rápidas e a gente indica o perfume ideal para você</small>
+          <span>✨</span><b>Na dúvida? Descubra sua fragrância</b><small>7 perguntas rápidas e a gente indica o perfume ideal para você</small>
         </button>
       )}
 
