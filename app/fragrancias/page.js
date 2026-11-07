@@ -2,6 +2,7 @@ import './fragrancias.css';
 import { q } from '../../lib/db';
 import { pool } from '../../lib/db';
 import { acharFicha } from '../../lib/fichas';
+import { PERFIS } from '../../lib/perfis';
 import { lerConfigGeral } from '../../lib/config';
 import Lista from './lista';
 
@@ -31,6 +32,7 @@ export default async function Pagina() {
       casa: f ? f.casa : '', genero: f ? f.genero : '', linha: f ? f.linha : '', familia: f ? f.familia : '', inspiracao: f ? f.inspiracao || '' : '',
       topo: f ? f.topo : '', coracao: f ? f.coracao : '', fundo: f ? f.fundo : '',
       historia: f ? f.historia : '', momentos: f ? f.momentos : [], clima: f ? f.clima : [], uso: f ? f.uso : '',
+      perfil: (f && PERFIS[f.nome]) || null,
     });
   });
   itens.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));

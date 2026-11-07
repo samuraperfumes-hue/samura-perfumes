@@ -1,5 +1,6 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import Teste from './teste';
 
 const link = (zap, nome) => 'https://wa.me/' + zap + '?text=' + encodeURIComponent('Olá! Vi a fragrância ' + nome + ' no catálogo da Samura Perfumes e quero fazer meu pedido.');
 
@@ -56,6 +57,12 @@ export default function Lista({ itens, zap }) {
   const [filtro, setFiltro] = useState('Todos');
   const [busca, setBusca] = useState('');
   const [aberto, setAberto] = useState(null);
+  const [teste, setTeste] = useState(false);
+  useEffect(() => { if (typeof window !== 'undefined' && window.location.hash === '#teste') setTeste(true); }, []);
+  function verDetalhes(nome) {
+    setTeste(false); setFiltro('Todos'); setBusca(''); setAberto(nome);
+    setTimeout(() => { const el = document.getElementById('fr-' + nome); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 80);
+  }
 
   const filtros = ['Todos', 'Masculino', 'Feminino'];
   if (itens.some((i) => i.genero === 'Unissex')) filtros.push('Unissex');
@@ -71,6 +78,12 @@ export default function Lista({ itens, zap }) {
         <p>Toque em uma fragrância para ver as notas, a história e quando usar.</p>
       </header>
 
+      {teste ? <Teste itens={itens} zap={zap} fechar={() => setTeste(false)} verDetalhes={verDetalhes} /> : (
+        <button type='button' className='fr-teste-chama' onClick={() => { setTeste(true); setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 30); }}>
+          <span>✨</span><b>Na dúvida? Descubra sua fragrância</b><small>5 perguntas rápidas e a gente indica o perfume ideal para você</small>
+        </button>
+      )}
+
       <input className='fr-busca' value={busca} onChange={(e) => setBusca(e.target.value)} placeholder='Buscar fragrância...' />
       <div className='fr-chips'>
         {filtros.map((f) => <button key={f} type='button' className={'fr-chip' + (filtro === f ? ' on' : '')} onClick={() => setFiltro(f)}>{f === 'Árabe' ? 'Árabes' : f === 'Masculino' ? 'Masculinas' : f === 'Feminino' ? 'Femininas' : f}</button>)}
@@ -80,7 +93,7 @@ export default function Lista({ itens, zap }) {
       {ver.map((i) => {
         const on = aberto === i.nome;
         return (
-          <article key={i.nome} className={'fr-card' + (on ? ' on' : '')}>
+          <article key={i.nome} id={'fr-' + i.nome} className={'fr-card' + (on ? ' on' : '')}>
             <button type='button' className='fr-cab' onClick={() => setAberto(on ? null : i.nome)} aria-expanded={on}>
               <Frasco mini />
               <span className='fr-tit'>
