@@ -1,14 +1,16 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Teste from './teste';
+import { fotoClasse } from '../../lib/perfis';
 
 const link = (zap, nome) => 'https://wa.me/' + zap + '?text=' + encodeURIComponent('Olá! Vi a fragrância ' + nome + ' no catálogo da Samura Perfumes e quero fazer meu pedido.');
 
-function Frasco({ nome, mini }) {
-  if (mini) return <span className='fr-mini' aria-hidden='true' />;
+function Frasco({ item, mini }) {
+  const nome = item.nome;
+  if (mini) return <span className={'fr-mini' + fotoClasse(item)} aria-hidden='true' />;
   return (
     <figure className='fr-foto-box'>
-      <div className='fr-foto' role='img' aria-label={'Frasco Samura Perfumes ' + nome} />
+      <div className={'fr-foto' + fotoClasse(item)} role='img' aria-label={'Frasco Samura Perfumes ' + nome} />
       <figcaption>{nome}</figcaption>
     </figure>
   );
@@ -95,7 +97,7 @@ export default function Lista({ itens, zap }) {
         return (
           <article key={i.nome} id={'fr-' + i.nome} className={'fr-card' + (on ? ' on' : '')}>
             <button type='button' className='fr-cab' onClick={() => setAberto(on ? null : i.nome)} aria-expanded={on}>
-              <Frasco mini />
+              <Frasco item={i} mini />
               <span className='fr-tit'>
                 <b>{i.nome}</b>
                 <small>{[i.genero, i.linha === 'Árabe' ? 'Árabe' : '', i.casa].filter(Boolean).join(' · ')}</small>
@@ -104,7 +106,7 @@ export default function Lista({ itens, zap }) {
             </button>
             {on && (
               <div className='fr-corpo'>
-                <Frasco nome={i.nome} />
+                <Frasco item={i} />
                 {i.familia && <p><span className='fr-rot'>Família olfativa</span>{i.familia}</p>}
                 {i.inspiracao && <p><span className='fr-rot'>Também lembra</span>{i.inspiracao}</p>}
                 {(i.topo || i.coracao || i.fundo) ? (

@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { fotoClasse } from '../../lib/perfis';
 
 // Teste "Descubra sua fragrância": perguntas simples, a pontuação usa o perfil de cada fragrância.
 const PERGUNTAS = [
@@ -112,7 +113,7 @@ export default function Teste({ itens, zap, fechar, verDetalhes }) {
         <>
           <p className='fr-teste-passo'>Seu perfume ideal é</p>
           <div className='fr-teste-res'>
-            <div className='fr-foto' role='img' aria-label={'Frasco Samura Perfumes ' + top.nome} />
+            <div className={'fr-foto' + fotoClasse(top)} role='img' aria-label={'Frasco Samura Perfumes ' + top.nome} />
             <div>
               <h2>{top.nome}</h2>
               <small>{[top.genero, top.casa].filter(Boolean).join(' · ')}</small>
@@ -127,7 +128,7 @@ export default function Teste({ itens, zap, fechar, verDetalhes }) {
             <p className='fr-teste-passo' style={{ marginTop: 18 }}>Também combinam com você</p>
             {alt.map((a) => (
               <button key={a.nome} type='button' className='fr-teste-alt' onClick={() => verDetalhes(a.nome)}>
-                <span className='fr-mini' aria-hidden='true' />
+                <span className={'fr-mini' + fotoClasse(a)} aria-hidden='true' />
                 <span><b>{a.nome}</b><small>{motivo(a, r)}</small></span>
               </button>
             ))}
