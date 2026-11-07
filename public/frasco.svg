@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500" width="400" height="500">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="42%" r="70%">
+      <stop offset="0" stop-color="#2b2213"/>
+      <stop offset="0.55" stop-color="#141210"/>
+      <stop offset="1" stop-color="#080808"/>
+    </radialGradient>
+    <linearGradient id="ouro" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f3dc8c"/>
+      <stop offset="0.45" stop-color="#d4af37"/>
+      <stop offset="1" stop-color="#8a6510"/>
+    </linearGradient>
+    <linearGradient id="tampa" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#5a5a5a" stop-opacity="0.55"/>
+      <stop offset="0.25" stop-color="#ffffff" stop-opacity="0.35"/>
+      <stop offset="0.6" stop-color="#2a2a2a" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#777" stop-opacity="0.45"/>
+    </linearGradient>
+    <linearGradient id="vidro" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.16"/>
+      <stop offset="0.12" stop-color="#ffffff" stop-opacity="0.05"/>
+      <stop offset="0.85" stop-color="#ffffff" stop-opacity="0.03"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0.14"/>
+    </linearGradient>
+    <linearGradient id="liquido" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e2b45a" stop-opacity="0.38"/>
+      <stop offset="1" stop-color="#8a5414" stop-opacity="0.55"/>
+    </linearGradient>
+    <radialGradient id="sombra" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#000" stop-opacity="0.8"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="reflexo" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d4af37" stop-opacity="0.14"/>
+      <stop offset="1" stop-color="#d4af37" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="500" fill="url(#bg)"/>
+  <ellipse cx="200" cy="418" rx="135" ry="16" fill="url(#sombra)"/>
+  <rect x="104" y="420" width="192" height="55" rx="20" fill="url(#reflexo)"/>
+  <!-- tampa -->
+  <rect x="140" y="62" width="120" height="78" rx="8" fill="url(#tampa)" stroke="#e8e8e8" stroke-opacity="0.35" stroke-width="1.5"/>
+  <rect x="152" y="72" width="16" height="58" rx="4" fill="#fff" opacity="0.18"/>
+  <!-- gargalo dourado -->
+  <rect x="160" y="140" width="80" height="24" rx="3" fill="url(#ouro)"/>
+  <rect x="160" y="150" width="80" height="2" fill="#6b4c0c" opacity="0.6"/>
+  <!-- frasco -->
+  <rect x="92" y="164" width="216" height="252" rx="26" fill="url(#vidro)" stroke="#ffffff" stroke-opacity="0.28" stroke-width="2"/>
+  <rect x="100" y="206" width="200" height="202" rx="20" fill="url(#liquido)"/>
+  <rect x="104" y="176" width="14" height="226" rx="7" fill="#fff" opacity="0.12"/>
+  <rect x="284" y="186" width="7" height="200" rx="3.5" fill="#fff" opacity="0.08"/>
+  <!-- rótulo -->
+  <rect x="128" y="236" width="144" height="122" rx="3" fill="#0d0c0b"/>
+  <rect x="134" y="242" width="132" height="110" rx="2" fill="none" stroke="url(#ouro)" stroke-width="1.4"/>
+  <path d="M134 254 q8 0 8 -12 M266 254 q-8 0 -8 -12 M134 340 q8 0 8 12 M266 340 q-8 0 -8 12" fill="none" stroke="url(#ouro)" stroke-width="1"/>
+  <path d="M200 256 l10 10 l-10 10 l-10 -10 z" fill="none" stroke="url(#ouro)" stroke-width="1.3"/>
+  <text x="200" y="306" text-anchor="middle" font-family="Cinzel, 'Trajan Pro', Georgia, 'Times New Roman', serif" font-size="27" font-weight="700" letter-spacing="3" fill="url(#ouro)">SAMURA</text>
+  <line x1="152" y1="316" x2="248" y2="316" stroke="url(#ouro)" stroke-width="1"/>
+  <text x="200" y="334" text-anchor="middle" font-family="Cinzel, 'Trajan Pro', Georgia, 'Times New Roman', serif" font-size="11" letter-spacing="5" fill="#d4af37">PERFUMES</text>
+</svg>
